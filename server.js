@@ -1,43 +1,58 @@
+require('dotenv').config();
 const express = require('express');
 const expressLayouts = require('express-ejs-layouts');
 const session = require('express-session');
 const path = require('path');
+const pgSession = require('connect-pg-simple')(session);
 
-const { initDatabase, SQLiteStore } = require('./config/database');
+const { initDatabase, getPool } = require('./config/database');
 const { loadUser } = require('./middleware/auth');
 const { i18nMiddleware } = require('./middleware/i18n');
-
-// ── Initialise ──────────────────────────────────────────────────────────────
-initDatabase();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ── View engine ─────────────────────────────────────────────────────────────
+// ── View engine ──────────────────────────────────────────────────────────────
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.set('layout', 'layout');
 app.use(expressLayouts);
 
-// ── Body parsing ────────────────────────────────────────────────────────────
+// ── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// ── Static files ────────────────────────────────────────────────────────────
+// ── Static files ─────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ── Sessions (SQLite-backed) ────────────────────────────────────────────────
-const storeFactory = new SQLiteStore(session);
+// ── Sessions (PostgreSQL-backed via Neon) ────────────────────────────────────
 app.use(session({
-  store: storeFactory.create(session),
+  store: new pgSession({
+    pool: getPool(),
+    createTableIfMissing: true,
+  }),
   secret: process.env.SESSION_SECRET || 'ioms-individual-secret-change-me',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }, // 7 days
 }));
 
-// ── Global middleware ───────────────────────────────────────────────────────
+// ── Lazy DB init (ensures schema exists before first request) ─────────────────
+let dbInitialized = false;
+const dbReadyPromise = initDatabase().then(() => { dbInitialized = true; }).catch(err => {
+  console.error('DB init failed:', err);
+});
+app.use(async (req, res, next) => {
+  if (dbInitialized) return next();
+  try {
+    await dbReadyPromise;
+    next();
+  } catch (err) {
+    res.status(500).send('Database initialisation failed.');
+  }
+});
+
+// ── Global middleware ─────────────────────────────────────────────────────────
 app.use(loadUser);
 app.use(i18nMiddleware);
 
@@ -58,7 +73,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── Routes ──────────────────────────────────────────────────────────────────
+// ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/', require('./routes/auth'));
 app.use('/home', require('./routes/home'));
 app.use('/disposal', require('./routes/disposal'));
@@ -86,7 +101,11 @@ app.use((err, req, res, next) => {
   res.status(500).render('error', { pageTitle: '500', message: 'Something went wrong. Please try again.' });
 });
 
-// ── Start ───────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n  🗑️  IOMS Individual running at http://localhost:${PORT}\n`);
-});
+// ── Export for Vercel / Start locally ────────────────────────────────────────
+module.exports = app;
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n  🗑️  IOMS Individual running at http://localhost:${PORT}\n`);
+  });
+}

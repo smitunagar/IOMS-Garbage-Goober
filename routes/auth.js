@@ -12,7 +12,7 @@ router.get('/login', (req, res) => {
 });
 
 /* ── POST /login ─────────────────────────────────────────────────────────── */
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   const t = res.locals.t;
 
@@ -23,7 +23,7 @@ router.post('/login', (req, res) => {
 
   let user;
   try {
-    user = db().prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase().trim());
+    user = await db().queryOne('SELECT * FROM users WHERE email = $1', [email.toLowerCase().trim()]);
   } catch (err) {
     console.error('Login DB error:', err);
     req.session.flash = { error: t('errorGeneric', { error: 'Database error' }) };
@@ -50,7 +50,7 @@ router.get('/signup', (req, res) => {
 });
 
 /* ── POST /signup ────────────────────────────────────────────────────────── */
-router.post('/signup', (req, res) => {
+router.post('/signup', async (req, res) => {
   const { name, email, password, confirmPassword } = req.body;
   const t = res.locals.t;
 
@@ -73,7 +73,7 @@ router.post('/signup', (req, res) => {
 
   let existing;
   try {
-    existing = db().prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase().trim());
+    existing = await db().queryOne('SELECT id FROM users WHERE email = $1', [email.toLowerCase().trim()]);
   } catch (err) {
     console.error('Signup DB error:', err);
     req.session.flash = { error: t('errorGeneric', { error: 'Database error' }) };
@@ -87,11 +87,12 @@ router.post('/signup', (req, res) => {
 
   try {
     const hash = bcrypt.hashSync(password, 10);
-    const result = db().prepare(
-      'INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)'
-    ).run(email.toLowerCase().trim(), hash, name.trim());
+    const row = await db().queryOne(
+      'INSERT INTO users (email, password_hash, name) VALUES ($1, $2, $3) RETURNING id',
+      [email.toLowerCase().trim(), hash, name.trim()]
+    );
 
-    req.session.userId = Number(result.lastInsertRowid);
+    req.session.userId = row.id;
     req.session.language = req.body.language || 'de';
     req.session.save(() => res.redirect('/onboarding'));
   } catch (err) {
@@ -102,9 +103,9 @@ router.post('/signup', (req, res) => {
 });
 
 /* ── GET /onboarding ─────────────────────────────────────────────────────── */
-router.get('/onboarding', (req, res) => {
+router.get('/onboarding', async (req, res) => {
   if (!req.session.userId) return res.redirect('/login');
-  const user = db().prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+  const user = await db().queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
   if (user && user.is_onboarded) return res.redirect('/home');
   res.render('auth/onboarding', {
     layout: 'layout',
@@ -115,7 +116,7 @@ router.get('/onboarding', (req, res) => {
 });
 
 /* ── POST /onboarding ────────────────────────────────────────────────────── */
-router.post('/onboarding', (req, res) => {
+router.post('/onboarding', async (req, res) => {
   if (!req.session.userId) return res.redirect('/login');
   const { floor, room } = req.body;
   const floorId = parseInt(floor);
@@ -131,9 +132,10 @@ router.post('/onboarding', (req, res) => {
   }
 
   try {
-    db().prepare(
-      'UPDATE users SET floor_id = ?, room_id = ?, is_onboarded = 1 WHERE id = ?'
-    ).run(floorId, roomId, req.session.userId);
+    await db().run(
+      'UPDATE users SET floor_id = $1, room_id = $2, is_onboarded = 1 WHERE id = $3',
+      [floorId, roomId, req.session.userId]
+    );
   } catch (err) {
     console.error('Onboarding DB error:', err);
     req.session.flash = { error: 'Failed to save room selection. Please try again.' };
@@ -144,11 +146,11 @@ router.post('/onboarding', (req, res) => {
 });
 
 /* ── POST /set-language ──────────────────────────────────────────────────── */
-router.post('/set-language', (req, res) => {
+router.post('/set-language', async (req, res) => {
   const lang = req.body.language === 'en' ? 'en' : 'de';
   req.session.language = lang;
   if (req.session.userId) {
-    db().prepare('UPDATE users SET language = ? WHERE id = ?').run(lang, req.session.userId);
+    await db().run('UPDATE users SET language = $1 WHERE id = $2', [lang, req.session.userId]);
   }
   res.redirect(req.headers.referer || '/');
 });

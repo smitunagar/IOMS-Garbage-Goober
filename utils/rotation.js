@@ -100,24 +100,26 @@ function weekRangeLabel(date) {
 
 // ─── Holiday check ────────────────────────────────────────────────────────────
 
-function isRoomOnHoliday(db, roomNumber, floorId, weekStartStr, weekEndStr) {
-  const row = db.prepare(
-    'SELECT id FROM room_holidays WHERE room_number = ? AND floor_id = ? AND start_date <= ? AND end_date >= ? LIMIT 1'
-  ).get(roomNumber, floorId, weekEndStr, weekStartStr);
+async function isRoomOnHoliday(db, roomNumber, floorId, weekStartStr, weekEndStr) {
+  const row = await db.queryOne(
+    'SELECT id FROM room_holidays WHERE room_number = $1 AND floor_id = $2 AND start_date <= $3 AND end_date >= $4 LIMIT 1',
+    [roomNumber, floorId, weekEndStr, weekStartStr]
+  );
   return !!row;
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────
 
-function _storeDutySchedule(db, floorId, weekStart, assignedRoom, isOverride, isFromPending) {
-  db.prepare(
-    'INSERT OR IGNORE INTO duty_schedule (floor_id, week_start, assigned_room, is_override, is_from_pending) VALUES (?, ?, ?, ?, ?)'
-  ).run(floorId, weekStart, assignedRoom, isOverride ? 1 : 0, isFromPending ? 1 : 0);
+async function _storeDutySchedule(db, floorId, weekStart, assignedRoom, isOverride, isFromPending) {
+  await db.run(
+    'INSERT INTO duty_schedule (floor_id, week_start, assigned_room, is_override, is_from_pending) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING',
+    [floorId, weekStart, assignedRoom, isOverride ? 1 : 0, isFromPending ? 1 : 0]
+  );
 }
 
 // ─── Core computation ─────────────────────────────────────────────────────────
 
-function _computeDuty(db, floorId, weekStartStr, activeRooms, anchor, opts) {
+async function _computeDuty(db, floorId, weekStartStr, activeRooms, anchor, opts) {
   const store       = !!(opts && opts.store);
   const pendingSnap = (opts && opts.pendingSnap) || [];
   const lastNormRef = (opts && opts.lastNormRef) || { value: null };
@@ -127,17 +129,22 @@ function _computeDuty(db, floorId, weekStartStr, activeRooms, anchor, opts) {
 
   // Step 1: FIFO pending queue
   const pendingRows = store
-    ? db.prepare('SELECT * FROM pending_duty_queue WHERE floor_id = ? AND is_processed = 0 ORDER BY queued_at ASC, id ASC').all(floorId)
+    ? await db.query(
+        'SELECT * FROM pending_duty_queue WHERE floor_id = $1 AND is_processed = 0 ORDER BY queued_at ASC, id ASC',
+        [floorId]
+      )
     : pendingSnap;
 
   for (let pi = 0; pi < pendingRows.length; pi++) {
     const entry = pendingRows[pi];
     if (!activeRooms.includes(entry.room_number)) continue;
-    if (!isRoomOnHoliday(db, entry.room_number, floorId, weekStartStr, weekEndStr)) {
+    if (!(await isRoomOnHoliday(db, entry.room_number, floorId, weekStartStr, weekEndStr))) {
       if (store) {
-        db.prepare('UPDATE pending_duty_queue SET is_processed = 1, assigned_week_start = ? WHERE id = ?')
-          .run(weekStartStr, entry.id);
-        _storeDutySchedule(db, floorId, weekStartStr, entry.room_number, false, true);
+        await db.run(
+          'UPDATE pending_duty_queue SET is_processed = 1, assigned_week_start = $1 WHERE id = $2',
+          [weekStartStr, entry.id]
+        );
+        await _storeDutySchedule(db, floorId, weekStartStr, entry.room_number, false, true);
       } else {
         pendingRows.splice(pi, 1);
       }
@@ -148,9 +155,10 @@ function _computeDuty(db, floorId, weekStartStr, activeRooms, anchor, opts) {
   // Step 2: Base rotation - advance from last normal-rotation room
   let startIdx;
   if (store) {
-    const lastNorm = db.prepare(
-      'SELECT assigned_room FROM duty_schedule WHERE floor_id = ? AND is_from_pending = 0 AND is_override = 0 ORDER BY week_start DESC LIMIT 1'
-    ).get(floorId);
+    const lastNorm = await db.queryOne(
+      'SELECT assigned_room FROM duty_schedule WHERE floor_id = $1 AND is_from_pending = 0 AND is_override = 0 ORDER BY week_start DESC LIMIT 1',
+      [floorId]
+    );
     if (lastNorm) {
       const idx = activeRooms.indexOf(lastNorm.assigned_room);
       startIdx = idx === -1 ? 0 : (idx + 1) % activeRooms.length;
@@ -172,21 +180,24 @@ function _computeDuty(db, floorId, weekStartStr, activeRooms, anchor, opts) {
     const idx  = (startIdx + i) % activeRooms.length;
     const room = activeRooms[idx];
 
-    if (!isRoomOnHoliday(db, room, floorId, weekStartStr, weekEndStr)) {
+    if (!(await isRoomOnHoliday(db, room, floorId, weekStartStr, weekEndStr))) {
       if (store) {
-        _storeDutySchedule(db, floorId, weekStartStr, room, false, false);
+        await _storeDutySchedule(db, floorId, weekStartStr, room, false, false);
       } else {
         lastNormRef.value = room;
       }
       return room;
     } else {
       if (store) {
-        const exists = db.prepare(
-          'SELECT id FROM pending_duty_queue WHERE floor_id = ? AND room_number = ? AND skipped_week_start = ? AND is_processed = 0'
-        ).get(floorId, room, weekStartStr);
+        const exists = await db.queryOne(
+          'SELECT id FROM pending_duty_queue WHERE floor_id = $1 AND room_number = $2 AND skipped_week_start = $3 AND is_processed = 0',
+          [floorId, room, weekStartStr]
+        );
         if (!exists) {
-          db.prepare('INSERT INTO pending_duty_queue (floor_id, room_number, skipped_week_start) VALUES (?, ?, ?)')
-            .run(floorId, room, weekStartStr);
+          await db.run(
+            'INSERT INTO pending_duty_queue (floor_id, room_number, skipped_week_start) VALUES ($1, $2, $3)',
+            [floorId, room, weekStartStr]
+          );
         }
       } else {
         if (!pendingSnap.some(function(p) { return p.room_number === room && !p.is_processed; })) {
@@ -201,58 +212,66 @@ function _computeDuty(db, floorId, weekStartStr, activeRooms, anchor, opts) {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-function getDutyForWeek(db, floorId, weekStartStr) {
-  const existing = db.prepare('SELECT assigned_room FROM duty_schedule WHERE floor_id = ? AND week_start = ?')
-    .get(floorId, weekStartStr);
+async function getDutyForWeek(db, floorId, weekStartStr) {
+  const existing = await db.queryOne(
+    'SELECT assigned_room FROM duty_schedule WHERE floor_id = $1 AND week_start = $2',
+    [floorId, weekStartStr]
+  );
   if (existing) return existing.assigned_room;
 
-  const anchor = db.prepare('SELECT * FROM duty_anchors WHERE floor_id = ?').get(floorId);
+  const anchor = await db.queryOne('SELECT * FROM duty_anchors WHERE floor_id = $1', [floorId]);
   if (!anchor) return null;
 
   if (anchor.manual_override_room_id) {
-    _storeDutySchedule(db, floorId, weekStartStr, anchor.manual_override_room_id, true, false);
+    await _storeDutySchedule(db, floorId, weekStartStr, anchor.manual_override_room_id, true, false);
     return anchor.manual_override_room_id;
   }
 
-  const activeRooms = db.prepare(
-    'SELECT room_number FROM rooms WHERE floor_id = ? AND is_active = 1 ORDER BY room_number'
-  ).all(floorId).map(function(r) { return r.room_number; });
+  const activeRooms = (await db.query(
+    'SELECT room_number FROM rooms WHERE floor_id = $1 AND is_active = 1 ORDER BY room_number',
+    [floorId]
+  )).map(function(r) { return r.room_number; });
 
   if (!activeRooms.length) return null;
   return _computeDuty(db, floorId, weekStartStr, activeRooms, anchor, { store: true });
 }
 
-function currentDutyRoom(db, floorId) {
+async function currentDutyRoom(db, floorId) {
   return getDutyForWeek(db, floorId, getWeekStartStr());
 }
 
-function adminOverrideDuty(db, floorId, weekStartStr, roomNumber) {
-  db.prepare('DELETE FROM duty_schedule WHERE floor_id = ? AND week_start = ?').run(floorId, weekStartStr);
-  _storeDutySchedule(db, floorId, weekStartStr, roomNumber, true, false);
+async function adminOverrideDuty(db, floorId, weekStartStr, roomNumber) {
+  await db.run('DELETE FROM duty_schedule WHERE floor_id = $1 AND week_start = $2', [floorId, weekStartStr]);
+  await _storeDutySchedule(db, floorId, weekStartStr, roomNumber, true, false);
 }
 
-function invalidateFutureSchedule(db, floorId) {
-  db.prepare('DELETE FROM duty_schedule WHERE floor_id = ? AND week_start > ?')
-    .run(floorId, getWeekStartStr());
+async function invalidateFutureSchedule(db, floorId) {
+  await db.run(
+    'DELETE FROM duty_schedule WHERE floor_id = $1 AND week_start > $2',
+    [floorId, getWeekStartStr()]
+  );
 }
 
-function upcomingDutyEntries(db, floorId, weeksAhead) {
+async function upcomingDutyEntries(db, floorId, weeksAhead) {
   if (!weeksAhead) weeksAhead = 4;
-  const anchor = db.prepare('SELECT * FROM duty_anchors WHERE floor_id = ?').get(floorId);
+  const anchor = await db.queryOne('SELECT * FROM duty_anchors WHERE floor_id = $1', [floorId]);
   if (!anchor) return [];
 
-  const activeRooms = db.prepare(
-    'SELECT room_number FROM rooms WHERE floor_id = ? AND is_active = 1 ORDER BY room_number'
-  ).all(floorId).map(function(r) { return r.room_number; });
+  const activeRooms = (await db.query(
+    'SELECT room_number FROM rooms WHERE floor_id = $1 AND is_active = 1 ORDER BY room_number',
+    [floorId]
+  )).map(function(r) { return r.room_number; });
   if (!activeRooms.length) return [];
 
-  const pendingSnap = db.prepare(
-    'SELECT * FROM pending_duty_queue WHERE floor_id = ? AND is_processed = 0 ORDER BY queued_at ASC, id ASC'
-  ).all(floorId);
+  const pendingSnap = await db.query(
+    'SELECT * FROM pending_duty_queue WHERE floor_id = $1 AND is_processed = 0 ORDER BY queued_at ASC, id ASC',
+    [floorId]
+  );
 
-  const lastNormEntry = db.prepare(
-    'SELECT assigned_room FROM duty_schedule WHERE floor_id = ? AND is_from_pending = 0 AND is_override = 0 ORDER BY week_start DESC LIMIT 1'
-  ).get(floorId);
+  const lastNormEntry = await db.queryOne(
+    'SELECT assigned_room FROM duty_schedule WHERE floor_id = $1 AND is_from_pending = 0 AND is_override = 0 ORDER BY week_start DESC LIMIT 1',
+    [floorId]
+  );
   const lastNormRef = { value: lastNormEntry ? lastNormEntry.assigned_room : null };
 
   const entries = [];
@@ -263,16 +282,17 @@ function upcomingDutyEntries(db, floorId, weeksAhead) {
     const weekEnd      = getWeekEnd(refDate);
     const weekStartStr = weekStart.toISOString().slice(0, 10);
 
-    const locked = db.prepare(
-      'SELECT assigned_room, is_from_pending FROM duty_schedule WHERE floor_id = ? AND week_start = ?'
-    ).get(floorId, weekStartStr);
+    const locked = await db.queryOne(
+      'SELECT assigned_room, is_from_pending FROM duty_schedule WHERE floor_id = $1 AND week_start = $2',
+      [floorId, weekStartStr]
+    );
 
     let room;
     if (locked) {
       room = locked.assigned_room;
       if (!locked.is_from_pending) lastNormRef.value = room;
     } else {
-      room = _computeDuty(db, floorId, weekStartStr, activeRooms, anchor, {
+      room = await _computeDuty(db, floorId, weekStartStr, activeRooms, anchor, {
         store: false,
         pendingSnap: pendingSnap,
         lastNormRef: lastNormRef,

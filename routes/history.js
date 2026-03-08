@@ -7,29 +7,31 @@ const { fmtDateTime } = require('../utils/rotation');
 const router = express.Router();
 
 /* ── GET /history ────────────────────────────────────────────────────────── */
-router.get('/', requireAuth, requireOnboarded, (req, res) => {
+router.get('/', requireAuth, requireOnboarded, async (req, res) => {
   const user = res.locals.user;
   const filter = req.query.filter || 'all'; // all | disposal | alert
 
   /* ── Disposals ─────────────────────────────────────────────────────────── */
-  const disposals = db().prepare(
+  const disposals = await db().query(
     `SELECT de.*, u.name AS user_name
      FROM disposal_events de
      LEFT JOIN users u ON u.id = de.user_id
-     WHERE de.floor_id = ?
+     WHERE de.floor_id = $1
      ORDER BY de.created_at DESC
-     LIMIT 100`
-  ).all(user.floor_id);
+     LIMIT 100`,
+    [user.floor_id]
+  );
 
   /* ── Alerts ────────────────────────────────────────────────────────────── */
-  const alerts = db().prepare(
+  const alerts = await db().query(
     `SELECT ba.*, u.name AS user_name
      FROM bin_alerts ba
      LEFT JOIN users u ON u.id = ba.user_id
-     WHERE ba.floor_id = ?
+     WHERE ba.floor_id = $1
      ORDER BY ba.created_at DESC
-     LIMIT 100`
-  ).all(user.floor_id);
+     LIMIT 100`,
+    [user.floor_id]
+  );
 
   /* ── Merge & sort ──────────────────────────────────────────────────────── */
   let entries = [];

@@ -1,17 +1,20 @@
 const { getDb } = require('../config/database');
 
 /** Populate res.locals.user from session if logged in. */
-function loadUser(req, res, next) {
+async function loadUser(req, res, next) {
   res.locals.user = null;
   res.locals.path = req.path;
 
   if (req.session && req.session.userId) {
-    const user = getDb().prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
-    if (user) {
-      res.locals.user = user;
-    } else {
-      // stale session – clear it
-      req.session.userId = null;
+    try {
+      const user = await getDb().queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
+      if (user) {
+        res.locals.user = user;
+      } else {
+        req.session.userId = null;
+      }
+    } catch (err) {
+      console.error('loadUser error:', err);
     }
   }
   next();

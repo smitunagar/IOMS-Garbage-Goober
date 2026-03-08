@@ -9,7 +9,7 @@ const {
 
 const router = express.Router();
 
-router.get('/', requireAuth, requireOnboarded, (req, res) => {
+router.get('/', requireAuth, requireOnboarded, async (req, res) => {
   const user = res.locals.user;
   const t = res.locals.t;
   const floorId = user.floor_id;
@@ -19,22 +19,23 @@ router.get('/', requireAuth, requireOnboarded, (req, res) => {
   let isYourTurn = false;
   let upcoming = [];
 
-  const anchor = db().prepare('SELECT id FROM duty_anchors WHERE floor_id = ?').get(floorId);
+  const anchor = await db().queryOne('SELECT id FROM duty_anchors WHERE floor_id = $1', [floorId]);
   if (anchor) {
-    dutyRoom   = getDutyForWeek(db(), floorId, getWeekStartStr());
+    dutyRoom   = await getDutyForWeek(db(), floorId, getWeekStartStr());
     isYourTurn = dutyRoom === user.room_id;
-    upcoming   = upcomingDutyEntries(db(), floorId, 4);
+    upcoming   = await upcomingDutyEntries(db(), floorId, 4);
   }
 
   /* ── This-week disposals ────────────────────────────────────────────────── */
   const weekStart = getWeekStart().toISOString();
   const weekEnd = getWeekEnd().toISOString();
 
-  const disposals = db().prepare(
+  const disposals = await db().query(
     `SELECT * FROM disposal_events
-     WHERE floor_id = ? AND created_at >= ? AND created_at <= ?
-     ORDER BY created_at DESC`
-  ).all(floorId, weekStart, weekEnd);
+     WHERE floor_id = $1 AND created_at >= $2 AND created_at <= $3
+     ORDER BY created_at DESC`,
+    [floorId, weekStart, weekEnd]
+  );
 
   // Count per bin type
   const binCounts = {};
@@ -49,9 +50,10 @@ router.get('/', requireAuth, requireOnboarded, (req, res) => {
   const lastDisposal = disposals.length > 0 ? disposals[0] : null;
 
   /* ── Open alerts ────────────────────────────────────────────────────────── */
-  const openAlerts = db().prepare(
-    'SELECT * FROM bin_alerts WHERE floor_id = ? AND is_resolved = 0 ORDER BY created_at DESC'
-  ).all(floorId);
+  const openAlerts = await db().query(
+    'SELECT * FROM bin_alerts WHERE floor_id = $1 AND is_resolved = 0 ORDER BY created_at DESC',
+    [floorId]
+  );
 
   /* ── Render ─────────────────────────────────────────────────────────────── */
   res.render('home/dashboard', {

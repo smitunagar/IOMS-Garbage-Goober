@@ -8,3 +8,4 @@ public/images/ChatGPT*
 .DS_Store
 *.log
 .env
+uploads/
