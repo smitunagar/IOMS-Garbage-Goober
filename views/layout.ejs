@@ -26,10 +26,11 @@
   </nav>
 
   <!-- ── Mobile offcanvas sidebar ──────────────────────────────────────── -->
-  <div class="offcanvas offcanvas-start d-lg-none" id="sidebarMobile" tabindex="-1">
-    <div class="offcanvas-header border-bottom">
-      <h5 class="offcanvas-title fw-bold text-primary-custom">Garbage Goober</h5>
-      <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  <div class="offcanvas offcanvas-start d-lg-none" id="sidebarMobile" tabindex="-1"
+       style="background: linear-gradient(180deg, #1B4D1F 0%, #2E7D32 60%, #255C28 100%); width: 260px;">
+    <div class="offcanvas-header" style="border-bottom: 1px solid rgba(255,255,255,0.10);">
+      <h5 class="offcanvas-title fw-bold" style="color:#fff;">Garbage Goober</h5>
+      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
     </div>
     <div class="offcanvas-body p-0">
       <%- include('partials/sidebar') %>

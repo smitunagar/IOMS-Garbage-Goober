@@ -1,60 +1,70 @@
-<div class="d-flex flex-column h-100 p-3">
-  <!-- ── Brand ─────────────────────────────────────────────────────────── -->
-  <div class="sidebar-logo-wrap mb-3 px-1">
-    <img src="/images/logo.png" alt="Garbage Goober" class="sidebar-logo">
-    <p class="sidebar-logo-sub">by iOMS</p>
+<div class="sidebar-inner d-flex flex-column h-100">
+
+  <!-- ── Brand header ───────────────────────────────────────────────────── -->
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-mascot">
+      <img src="/images/Mascot.png" alt="Mascot">
+    </div>
+    <img src="/images/logo.png" alt="Garbage Goober" class="sidebar-brand-logo">
+    <p class="sidebar-brand-sub">by iOMS</p>
   </div>
 
-  <!-- ── User info ─────────────────────────────────────────────────────── -->
+  <!-- ── User pill ──────────────────────────────────────────────────────── -->
   <% if (user) { %>
-  <div class="px-2 mb-3 small text-muted">
-    <div class="fw-semibold text-dark"><%= user.name %></div>
-    <div><%= t('roomFloorInfo', { roomId: C.roomLabel(user.room_id), floorId: user.floor_id }) %></div>
+  <div class="sidebar-user">
+    <div class="sidebar-user-avatar">
+      <%= user.name.charAt(0).toUpperCase() %>
+    </div>
+    <div class="sidebar-user-info">
+      <div class="sidebar-user-name"><%= user.name %></div>
+      <div class="sidebar-user-room">
+        <i class="bi bi-door-open me-1"></i><%= C.roomLabel(user.room_id) %>
+        &nbsp;·&nbsp;
+        <i class="bi bi-building me-1"></i><%= t('floorChipLabel', { floor: user.floor_id }) %>
+      </div>
+    </div>
   </div>
   <% } %>
 
-  <hr class="mt-0">
-
-  <!-- ── Navigation ────────────────────────────────────────────────────── -->
-  <nav class="nav flex-column flex-grow-1">
-    <a class="nav-link rounded-2 px-3 py-2 mb-1 <%= path === '/home' ? 'active' : '' %>"
-       href="/home">
-      <i class="bi bi-house me-2"></i><%= t('navDashboard') %>
+  <!-- ── Navigation ─────────────────────────────────────────────────────── -->
+  <nav class="sidebar-nav flex-grow-1">
+    <a class="sidebar-link <%= path === '/home' ? 'active' : '' %>" href="/home">
+      <span class="sidebar-link-icon"><i class="bi bi-house-fill"></i></span>
+      <span class="sidebar-link-label"><%= t('navDashboard') %></span>
     </a>
-    <a class="nav-link rounded-2 px-3 py-2 mb-1 <%= path.startsWith('/disposal') ? 'active' : '' %>"
-       href="/disposal/log">
-      <i class="bi bi-trash me-2"></i><%= t('navDisposal') %>
+    <a class="sidebar-link <%= path.startsWith('/disposal') ? 'active' : '' %>" href="/disposal/log">
+      <span class="sidebar-link-icon"><i class="bi bi-trash3-fill"></i></span>
+      <span class="sidebar-link-label"><%= t('navDisposal') %></span>
     </a>
-    <a class="nav-link rounded-2 px-3 py-2 mb-1 <%= path.startsWith('/alerts') ? 'active' : '' %>"
-       href="/alerts/report">
-      <i class="bi bi-exclamation-triangle me-2"></i><%= t('navAlert') %>
+    <a class="sidebar-link <%= path.startsWith('/alerts') ? 'active' : '' %>" href="/alerts/report">
+      <span class="sidebar-link-icon"><i class="bi bi-exclamation-triangle-fill"></i></span>
+      <span class="sidebar-link-label"><%= t('navAlert') %></span>
     </a>
-    <a class="nav-link rounded-2 px-3 py-2 mb-1 <%= path.startsWith('/history') ? 'active' : '' %>"
-       href="/history">
-      <i class="bi bi-clock-history me-2"></i><%= t('navHistory') %>
+    <a class="sidebar-link <%= path.startsWith('/history') ? 'active' : '' %>" href="/history">
+      <span class="sidebar-link-icon"><i class="bi bi-clock-history"></i></span>
+      <span class="sidebar-link-label"><%= t('navHistory') %></span>
     </a>
 
     <% if (user && user.is_admin) { %>
-    <hr>
-    <a class="nav-link rounded-2 px-3 py-2 mb-1 <%= path.startsWith('/admin') ? 'active' : '' %>"
-       href="/admin">
-      <i class="bi bi-shield-lock me-2"></i><%= t('navAdmin') %>
+    <div class="sidebar-section-label">Admin</div>
+    <a class="sidebar-link <%= path.startsWith('/admin') ? 'active' : '' %>" href="/admin">
+      <span class="sidebar-link-icon"><i class="bi bi-shield-fill-check"></i></span>
+      <span class="sidebar-link-label"><%= t('navAdmin') %></span>
     </a>
     <% } %>
   </nav>
 
-  <!-- ── Bottom section ────────────────────────────────────────────────── -->
-  <div class="border-top pt-3 mt-3">
-    <!-- Language toggle -->
-    <div class="lang-toggle d-flex mb-3 px-2">
-      <form method="POST" action="/set-language" class="d-flex gap-1 w-100">
-        <button name="language" value="de" class="btn btn-sm flex-fill <%= lang === 'de' ? 'active' : 'btn-outline-secondary' %>">🇩🇪 DE</button>
-        <button name="language" value="en" class="btn btn-sm flex-fill <%= lang === 'en' ? 'active' : 'btn-outline-secondary' %>">🇬🇧 EN</button>
-      </form>
-    </div>
-
-    <a class="nav-link text-danger rounded-2 px-3 py-2" href="/logout">
+  <!-- ── Footer ─────────────────────────────────────────────────────────── -->
+  <div class="sidebar-footer">
+    <form method="POST" action="/set-language" class="sidebar-lang">
+      <button name="language" value="de"
+              class="sidebar-lang-btn <%= lang === 'de' ? 'active' : '' %>">🇩🇪 DE</button>
+      <button name="language" value="en"
+              class="sidebar-lang-btn <%= lang === 'en' ? 'active' : '' %>">🇬🇧 EN</button>
+    </form>
+    <a class="sidebar-logout" href="/logout">
       <i class="bi bi-box-arrow-left me-2"></i><%= t('logoutButton') %>
     </a>
   </div>
+
 </div>
