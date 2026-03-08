@@ -414,12 +414,12 @@
   gap: 5px;
 }
 .sidebar-wm-logo {
-  height: 22px;
+  height: 28px;
   width: auto;
   display: inline-block;
   vertical-align: middle;
-  border-radius: 4px;
-  opacity: 0.85;
+  border-radius: 3px;
+  opacity: 0.9;
 }
 
 /* Auth page WebMeister360 credit */
@@ -435,12 +435,11 @@
   letter-spacing: 0.3px;
 }
 .lp-wm-logo {
-  height: 26px;
-  width: auto;
-  display: inline-block;
-  vertical-align: middle;
+  width: 160px;
+  height: auto;
+  display: block;
   border-radius: 4px;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 .main-content {
   min-height: 100vh;
