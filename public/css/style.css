@@ -265,8 +265,7 @@
 .sidebar-brand-logo {
   width: 130px;
   height: auto;
-  filter: brightness(0) invert(1);
-  opacity: 0.92;
+  opacity: 0.95;
 }
 
 /* User pill */
@@ -419,7 +418,8 @@
   display: inline-block;
   vertical-align: middle;
   border-radius: 3px;
-  opacity: 0.9;
+  filter: brightness(0) invert(1);
+  opacity: 0.80;
 }
 
 /* Auth page WebMeister360 credit */
