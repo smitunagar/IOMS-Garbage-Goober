@@ -9,7 +9,7 @@
   <% if (user) { %>
   <div class="px-2 mb-3 small text-muted">
     <div class="fw-semibold text-dark"><%= user.name %></div>
-    <div><%= t('roomFloorInfo', { roomId: user.room_id, floorId: user.floor_id }) %></div>
+    <div><%= t('roomFloorInfo', { roomId: C.roomLabel(user.room_id), floorId: user.floor_id }) %></div>
   </div>
   <% } %>
 

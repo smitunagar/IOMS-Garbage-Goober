@@ -48,7 +48,8 @@ function selectRoom(roomId) {
   const btn = document.getElementById('confirmBtn');
   if (btn) {
     btn.disabled = false;
-    btn.textContent = btn.dataset.confirmText.replace('{room}', roomId);
+    const label = cell ? cell.textContent.trim() : String(roomId);
+    btn.textContent = btn.dataset.confirmText.replace('{room}', label);
   }
 }
 
@@ -59,17 +60,18 @@ function selectFloor(floorId) {
   if (chip) chip.classList.add('active');
   document.getElementById('selectedFloor').value = floorId;
 
-  // Show rooms for this floor
+  // Show rooms for this floor (X09 and X11 are merged into X08/X09 and X10/X11)
   const grid = document.getElementById('roomGrid');
   grid.innerHTML = '';
-  const perFloor = parseInt(grid.dataset.perFloor) || 16;
-  for (let i = 1; i <= perFloor; i++) {
-    const room = floorId * 100 + i;
+  for (let i = 1; i <= 16; i++) {
+    if (i === 9 || i === 11) continue; // merged – not shown separately
+    const roomId = floorId * 100 + i;
+    const label = (i === 8 || i === 10) ? `${roomId}/${roomId + 1}` : String(roomId);
     const cell = document.createElement('div');
     cell.className = 'room-cell';
-    cell.dataset.room = room;
-    cell.textContent = room;
-    cell.onclick = () => selectRoom(room);
+    cell.dataset.room = roomId;
+    cell.textContent = label;
+    cell.onclick = () => selectRoom(roomId);
     grid.appendChild(cell);
   }
 

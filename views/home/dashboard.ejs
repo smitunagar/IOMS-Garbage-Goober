@@ -4,7 +4,7 @@
     <%= t('greetingHello', { name: user.name || t('residentFallbackName') }) %>
   </h4>
   <p class="text-muted small mb-0">
-    <%= t('roomFloorInfo', { roomId: user.room_id, floorId: user.floor_id }) %>
+    <%= t('roomFloorInfo', { roomId: C.roomLabel(user.room_id), floorId: user.floor_id }) %>
   </p>
 </div>
 
@@ -27,8 +27,8 @@
         <% } %>
       </div>
       <% if (dutyRoom) { %>
-        <div class="room-number"><%= dutyRoom %></div>
-        <div class="small opacity-75"><%= t('dutyRoomNumber', { room: dutyRoom }) %></div>
+        <div class="room-number"><%= C.roomLabel(dutyRoom) %></div>
+        <div class="small opacity-75"><%= t('dutyRoomNumber', { room: C.roomLabel(dutyRoom) }) %></div>
         <div class="d-flex gap-2 mt-3">
           <span class="info-pill"><i class="bi bi-calendar3 me-1"></i><%= weekLabel %></span>
           <span class="info-pill"><i class="bi bi-hourglass-split me-1"></i><%= t('daysRemaining', { days: daysLeft }) %></span>
@@ -93,7 +93,7 @@
         <% upcoming.forEach(entry => { %>
           <div class="list-group-item d-flex justify-content-between align-items-center px-0 border-0">
             <div>
-              <span class="fw-semibold"><%= t('roomNumberLabel', { room: entry.room }) %></span>
+              <span class="fw-semibold"><%= t('roomNumberLabel', { room: C.roomLabel(entry.room) }) %></span>
               <% if (entry.room === user.room_id) { %>
                 <span class="badge bg-success ms-1"><%= t('dutyYourTurn') %></span>
               <% } %>

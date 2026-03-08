@@ -1,7 +1,7 @@
 'use strict';
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
-const { TOTAL_FLOORS, ROOMS_PER_FLOOR } = require('../utils/constants');
+const { TOTAL_FLOORS, ROOMS_PER_FLOOR, roomsForFloor } = require('../utils/constants');
 
 let pool;
 
@@ -137,8 +137,8 @@ async function initDatabase() {
     const placeholders = [];
     let idx = 1;
     for (let floor = 1; floor <= TOTAL_FLOORS; floor++) {
-      for (let r = 1; r <= ROOMS_PER_FLOOR; r++) {
-        values.push(floor * 100 + r, floor);
+      for (const roomNum of roomsForFloor(floor)) {
+        values.push(roomNum, floor);
         placeholders.push(`($${idx}, $${idx + 1})`);
         idx += 2;
       }
@@ -147,8 +147,11 @@ async function initDatabase() {
       `INSERT INTO rooms (room_number, floor_id) VALUES ${placeholders.join(', ')} ON CONFLICT DO NOTHING`,
       values
     );
-    console.log(`Seeded ${TOTAL_FLOORS * ROOMS_PER_FLOOR} rooms.`);
+    console.log(`Seeded ${TOTAL_FLOORS * 14} rooms (14 per floor, X09 and X11 merged).`);
   }
+
+  // ── Remove merged rooms (X09 and X11 are part of X08/X09 and X10/X11) ──────
+  await p.query(`DELETE FROM rooms WHERE room_number % 100 IN (9, 11)`);
 
   // ── Seed default admin ────────────────────────────────────────────────────
   const { rows: adminRows } = await p.query('SELECT id FROM users WHERE email = $1', ['admin@ioms.de']);

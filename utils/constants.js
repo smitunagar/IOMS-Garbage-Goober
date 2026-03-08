@@ -22,8 +22,23 @@ module.exports = {
     7: 'IOMS-F7-2024',
   },
 
-  /** Generate all room numbers for a floor */
+  /**
+   * Rooms X08 and X09 are one combined room → stored as X08, labelled "X08/X09".
+   * Rooms X10 and X11 are one combined room → stored as X10, labelled "X10/X11".
+   */
+  roomLabel(roomId) {
+    const last2 = roomId % 100;
+    if (last2 === 8 || last2 === 10) return `${roomId}/${roomId + 1}`;
+    return String(roomId);
+  },
+
+  /** Generate all active room IDs for a floor (X09 and X11 are merged, not listed) */
   roomsForFloor(floorId) {
-    return Array.from({ length: this.ROOMS_PER_FLOOR }, (_, i) => floorId * 100 + (i + 1));
+    const rooms = [];
+    for (let i = 1; i <= 16; i++) {
+      if (i === 9 || i === 11) continue; // merged into X08/X09 and X10/X11
+      rooms.push(floorId * 100 + i);
+    }
+    return rooms;
   },
 };
