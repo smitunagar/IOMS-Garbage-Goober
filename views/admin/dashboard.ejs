@@ -1,0 +1,51 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-1"><%= t('adminDashboardTitle') %></h4>
+    <p class="text-muted small mb-0"><%= weekLabel %></p>
+  </div>
+  <a href="/admin/compliance" class="btn btn-outline-primary btn-sm">
+    <i class="bi bi-bar-chart me-1"></i> <%= t('complianceButton') %>
+  </a>
+</div>
+
+<div class="row g-3">
+  <% floors.forEach(floor => { %>
+  <div class="col-12 col-sm-6 col-lg-4">
+    <div class="card floor-card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-bold mb-0"><%= t('floorChipLabel', { floor: floor.id }) %></h6>
+          <% if (floor.alertCount > 0) { %>
+            <span class="badge bg-danger"><%= floor.alertCount %> <i class="bi bi-exclamation-triangle"></i></span>
+          <% } %>
+        </div>
+
+        <% if (floor.dutyRoom) { %>
+          <p class="mb-1 text-primary-custom fw-semibold">
+            <i class="bi bi-person-badge me-1"></i>
+            <%= t('assignedRoom', { room: floor.dutyRoom }) %>
+          </p>
+        <% } else { %>
+          <p class="mb-1 text-muted small"><%= t('noDutyAssigned') %></p>
+        <% } %>
+
+        <% if (floor.disposalCount > 0) { %>
+          <p class="small text-muted mb-2">
+            <i class="bi bi-check-circle text-success me-1"></i>
+            <%= t('disposalCountThisWeek', { count: floor.disposalCount }) %>
+          </p>
+        <% } else { %>
+          <p class="small text-danger mb-2">
+            <i class="bi bi-x-circle me-1"></i>
+            <%= t('noDisposalThisWeek') %>
+          </p>
+        <% } %>
+
+        <a href="/admin/rotation/<%= floor.id %>" class="btn btn-sm btn-outline-primary w-100">
+          <i class="bi bi-arrow-repeat me-1"></i> <%= t('rotationButton') %>
+        </a>
+      </div>
+    </div>
+  </div>
+  <% }); %>
+</div>

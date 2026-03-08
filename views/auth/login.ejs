@@ -1,0 +1,65 @@
+<div class="lp-wrap">
+  <div class="lp-center">
+
+    <!-- mascot floats above card -->
+    <div class="lp-mascot-wrap">
+      <img src="/images/Mascot.png" alt="Garbage Goober" class="lp-mascot-img">
+    </div>
+
+    <!-- main card -->
+    <div class="lp-card">
+
+      <!-- logo -->
+      <div class="lp-logo-wrap">
+        <img src="/images/logo.png" alt="Garbage Goober" class="lp-logo-img">
+      </div>
+
+      <% if (flash && flash.error) { %>
+        <div class="alert alert-danger mb-3" role="alert">
+          <i class="bi bi-exclamation-circle me-1"></i><%= flash.error %>
+        </div>
+      <% } %>
+
+      <form method="POST" action="/login" novalidate>
+        <div class="input-float mb-3">
+          <input type="email" name="email" id="loginEmail"
+                 class="form-control"
+                 placeholder=" " required autofocus>
+          <label for="loginEmail">
+            <i class="bi bi-envelope me-1"></i><%= t('emailLabel') %>
+          </label>
+        </div>
+
+        <div class="input-float mb-4">
+          <input type="password" name="password" id="loginPw"
+                 class="form-control"
+                 placeholder=" " required>
+          <label for="loginPw">
+            <i class="bi bi-lock me-1"></i><%= t('passwordLabel') %>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-login w-100">
+          <%= t('loginButton') %>
+          <i class="bi bi-arrow-right ms-2"></i>
+        </button>
+      </form>
+
+      <div class="lp-divider"><span>or</span></div>
+
+      <p class="text-center text-muted small mb-0">
+        <%= t('noAccountYet') %>
+        <a href="/signup" class="login-link"><%= t('signUpLink') %></a>
+      </p>
+
+      <!-- language toggle footer -->
+      <div class="lp-lang-bar">
+        <form method="POST" action="/set-language" class="d-flex gap-2">
+          <button name="language" value="de" class="btn btn-xs-lang <%= lang === 'de' ? 'active' : '' %>">🇩🇪 DE</button>
+          <button name="language" value="en" class="btn btn-xs-lang <%= lang === 'en' ? 'active' : '' %>">🇬🇧 EN</button>
+        </form>
+      </div>
+
+    </div><!-- /.lp-card -->
+  </div><!-- /.lp-center -->
+</div><!-- /.lp-wrap -->

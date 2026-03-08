@@ -1,0 +1,64 @@
+<div class="lp-wrap">
+  <div class="lp-center" style="max-width: 500px;">
+
+    <!-- mascot floats above card -->
+    <div class="lp-mascot-wrap">
+      <img src="/images/Mascot.png" alt="Garbage Goober" class="lp-mascot-img">
+    </div>
+
+    <div class="lp-card">
+
+      <!-- logo -->
+      <div class="lp-logo-wrap">
+        <img src="/images/logo.png" alt="Garbage Goober" class="lp-logo-img">
+      </div>
+
+      <h2 class="lp-card-sub-heading"><%= t('welcomeTitle') %></h2>
+      <p class="lp-card-sub"><%= t('welcomeSubtitle') %></p>
+
+      <% if (flash && flash.error) { %>
+        <div class="alert alert-danger mb-3" role="alert">
+          <i class="bi bi-exclamation-circle me-1"></i><%= flash.error %>
+        </div>
+      <% } %>
+
+      <form method="POST" action="/onboarding">
+        <!-- Floor selection -->
+        <div class="mb-4">
+          <label class="form-label small fw-semibold"><%= t('floorLabel') %></label>
+          <div class="d-flex flex-wrap gap-2">
+            <% for (let f = 1; f <= totalFloors; f++) { %>
+              <button type="button"
+                      class="btn btn-outline-secondary floor-chip"
+                      data-floor="<%= f %>"
+                      onclick="selectFloor(<%= f %>)">
+                <%= t('floorChipLabel', { floor: f }) %>
+              </button>
+            <% } %>
+          </div>
+          <input type="hidden" name="floor" id="selectedFloor" value="" required>
+        </div>
+
+        <!-- Room grid -->
+        <div class="mb-4">
+          <label class="form-label small fw-semibold"><%= t('roomLabel') %></label>
+          <div class="room-grid" id="roomGrid" data-per-floor="<%= roomsPerFloor %>">
+            <p class="text-muted small w-100 text-center py-3">
+              <i class="bi bi-arrow-up"></i> <%= t('floorLabel') %>
+            </p>
+          </div>
+          <input type="hidden" name="room" id="selectedRoom" value="">
+        </div>
+
+        <!-- Confirm button -->
+        <button type="submit" class="btn btn-login w-100"
+                id="confirmBtn" disabled
+                data-confirm-text="<%= t('confirmRoomButton') %>"
+                data-select-text="<%= t('selectRoomButton') %>">
+          <%= t('selectRoomButton') %> <i class="bi bi-arrow-right ms-2"></i>
+        </button>
+      </form>
+
+    </div><!-- /.lp-card -->
+  </div><!-- /.lp-center -->
+</div><!-- /.lp-wrap -->

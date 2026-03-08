@@ -1,0 +1,71 @@
+<div class="lp-wrap">
+  <div class="lp-center">
+
+    <!-- mascot floats above card -->
+    <div class="lp-mascot-wrap">
+      <img src="/images/Mascot.png" alt="Garbage Goober" class="lp-mascot-img">
+    </div>
+
+    <div class="lp-card">
+
+      <!-- logo -->
+      <div class="lp-logo-wrap">
+        <img src="/images/logo.png" alt="Garbage Goober" class="lp-logo-img">
+      </div>
+
+      <h2 class="lp-card-sub-heading"><%= t('createAccountHeading') %></h2>
+      <p class="lp-card-sub"><%= t('createAccountSubtitle') %></p>
+
+      <% if (flash && flash.error) { %>
+        <div class="alert alert-danger mb-3" role="alert">
+          <i class="bi bi-exclamation-circle me-1"></i><%= flash.error %>
+        </div>
+      <% } %>
+
+      <form method="POST" action="/signup">
+        <div class="input-float mb-3">
+          <input type="text" name="name" id="signupName" class="form-control" placeholder=" " required autofocus>
+          <label for="signupName"><i class="bi bi-person me-1"></i><%= t('fullNameLabel') %></label>
+        </div>
+        <div class="input-float mb-3">
+          <input type="email" name="email" id="signupEmail" class="form-control" placeholder=" " required>
+          <label for="signupEmail"><i class="bi bi-envelope me-1"></i><%= t('emailLabel') %></label>
+        </div>
+        <div class="input-float mb-3">
+          <input type="password" name="password" id="signupPw" class="form-control" placeholder=" " required minlength="8">
+          <label for="signupPw"><i class="bi bi-lock me-1"></i><%= t('passwordLabel') %></label>
+        </div>
+        <div class="input-float mb-4">
+          <input type="password" name="confirmPassword" id="signupPw2" class="form-control" placeholder=" " required>
+          <label for="signupPw2"><i class="bi bi-lock-fill me-1"></i><%= t('confirmPasswordLabel') %></label>
+        </div>
+
+        <div class="mb-4">
+          <p class="text-muted small mb-2"><%= t('languageLabel') %></p>
+          <div class="d-flex gap-2">
+            <label class="flex-fill">
+              <input type="radio" name="language" value="de" class="btn-check" <%= lang === 'de' ? 'checked' : '' %>>
+              <span class="btn btn-outline-secondary w-100">🇩🇪 Deutsch</span>
+            </label>
+            <label class="flex-fill">
+              <input type="radio" name="language" value="en" class="btn-check" <%= lang === 'en' ? 'checked' : '' %>>
+              <span class="btn btn-outline-secondary w-100">🇬🇧 English</span>
+            </label>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-login w-100">
+          <%= t('createAccountButton') %> <i class="bi bi-arrow-right ms-2"></i>
+        </button>
+      </form>
+
+      <div class="lp-divider"><span>or</span></div>
+
+      <p class="text-center text-muted small mb-0">
+        <%= t('alreadyRegistered') %>
+        <a href="/login" class="login-link"><%= t('loginLink') %></a>
+      </p>
+
+    </div><!-- /.lp-card -->
+  </div><!-- /.lp-center -->
+</div><!-- /.lp-wrap -->

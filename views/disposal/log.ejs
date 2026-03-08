@@ -1,0 +1,252 @@
+<div class="mb-4">
+  <h4 class="fw-bold"><%= t('logDisposalTitle') %></h4>
+</div>
+
+<form method="POST" action="/disposal/log" enctype="multipart/form-data">
+  <!-- ── Bin selection ───────────────────────────────────────────────── -->
+  <div class="stat-card mb-3">
+    <h6 class="fw-semibold mb-3"><%= t('whichBinsEmptied') %></h6>
+    <div class="bin-selector-grid">
+
+      <!-- Verpackung / Gelber Sack -->
+      <label class="bin-select-card" style="--bc:#F9A825;" onclick="toggleBinChip(this)">
+        <input type="checkbox" name="bins" value="verpackung">
+        <div class="bin-select-swatch">♻️</div>
+        <div class="bin-select-info">
+          <strong><%= lang === 'de' ? 'Verpackung' : 'Packaging' %></strong>
+          <span class="bin-select-sub"><%= lang === 'de' ? 'Gelber Sack · Plastik, Dosen, Tetrapaks' : 'Yellow Bag · Plastic, cans, tetrapaks' %></span>
+        </div>
+        <div class="bin-select-check"><i class="bi bi-check-lg"></i></div>
+      </label>
+
+      <!-- Papier -->
+      <label class="bin-select-card" style="--bc:#1565C0;" onclick="toggleBinChip(this)">
+        <input type="checkbox" name="bins" value="papier">
+        <div class="bin-select-swatch">📦</div>
+        <div class="bin-select-info">
+          <strong><%= lang === 'de' ? 'Papier' : 'Paper' %></strong>
+          <span class="bin-select-sub"><%= lang === 'de' ? 'Blauer Behälter · Zeitungen, Karton' : 'Blue bin · Newspapers, cardboard' %></span>
+        </div>
+        <div class="bin-select-check"><i class="bi bi-check-lg"></i></div>
+      </label>
+
+      <!-- Restmüll -->
+      <label class="bin-select-card" style="--bc:#616161;" onclick="toggleBinChip(this)">
+        <input type="checkbox" name="bins" value="restmuell">
+        <div class="bin-select-swatch">🗑️</div>
+        <div class="bin-select-info">
+          <strong><%= lang === 'de' ? 'Restmüll' : 'Residual waste' %></strong>
+          <span class="bin-select-sub"><%= lang === 'de' ? 'Grauer Behälter · Nicht recycelbar' : 'Grey bin · Non-recyclable waste' %></span>
+        </div>
+        <div class="bin-select-check"><i class="bi bi-check-lg"></i></div>
+      </label>
+
+      <!-- BioMüll -->
+      <label class="bin-select-card" style="--bc:#2E7D32;" onclick="toggleBinChip(this)">
+        <input type="checkbox" name="bins" value="biomuell">
+        <div class="bin-select-swatch">🌿</div>
+        <div class="bin-select-info">
+          <strong><%= lang === 'de' ? 'BioMüll' : 'Organic waste' %></strong>
+          <span class="bin-select-sub"><%= lang === 'de' ? 'Grüner Eimer · Essensreste, Schalen' : 'Green bin · Food scraps, peels' %></span>
+        </div>
+        <div class="bin-select-check"><i class="bi bi-check-lg"></i></div>
+      </label>
+
+    </div>
+  </div>
+
+  <!-- ── Note ────────────────────────────────────────────────────────── -->
+  <div class="stat-card mb-3">
+    <h6 class="fw-semibold mb-2"><%= t('noteOptionalLabel') %></h6>
+    <textarea name="note" class="form-control" rows="2" placeholder="<%= t('noteHintExample') %>"></textarea>
+  </div>
+
+  <!-- ── Photo upload ────────────────────────────────────────────────── -->
+  <div class="stat-card mb-3">
+    <h6 class="fw-semibold mb-2"><%= t('photoProofOptional') %></h6>
+    <input type="file" name="photo" class="form-control" accept="image/*">
+  </div>
+
+  <!-- ── QR verification ─────────────────────────────────────────────── -->
+  <div class="stat-card mb-4">
+    <h6 class="fw-semibold mb-2"><%= t('qrVerifyRequired') %></h6>
+    <input type="text" name="qrCode" class="form-control" required
+           placeholder="<%= t('qrCodeInputHint') %>">
+    <div class="form-text text-muted small mt-1">
+      <i class="bi bi-qr-code me-1"></i> QR-Code: IOMS-F<%= user.floor_id %>-2024
+    </div>
+  </div>
+
+  <!-- ── Submit ──────────────────────────────────────────────────────── -->
+  <button type="submit" class="btn btn-primary btn-lg w-100">
+    <i class="bi bi-check-circle me-1"></i> <%= t('sendButton') %>
+  </button>
+</form>
+
+<!-- ── Bin guide ────────────────────────────────────────────────────────── -->
+<div class="mt-5">
+  <h5 class="fw-bold mb-1">🗂️ <%= lang === 'de' ? 'Mülltrennung – Übersicht' : 'Waste Sorting Guide' %></h5>
+  <p class="text-muted small mb-3"><%= lang === 'de' ? 'Die Küche hat 3 Hauptbehälter + 1 Bio-Eimer. Tippe auf einen Behälter für Details.' : 'The kitchen has 3 main bins + 1 bio bin. Tap a bin for details.' %></p>
+
+  <div class="accordion bin-guide-accordion" id="binGuide">
+
+    <!-- ── Verpackung / Gelber Sack ── -->
+    <div class="bin-guide-card" style="--bin-color: #F9A825;">
+      <button class="bin-guide-header collapsed" data-bs-toggle="collapse" data-bs-target="#guideVerpackung">
+        <span class="bin-guide-dot" style="background:#F9A825;"></span>
+        <span class="bin-guide-emoji">♻️</span>
+        <div class="bin-guide-title">
+          <strong>Verpackung / Gelber Sack</strong>
+          <span class="text-muted fw-normal" style="font-size:0.8rem;"> · Yellow Bin</span>
+        </div>
+        <i class="bi bi-chevron-down bin-guide-chevron ms-auto"></i>
+      </button>
+      <div id="guideVerpackung" class="collapse" data-bs-parent="#binGuide">
+        <div class="bin-guide-body">
+          <div class="row g-3">
+            <div class="col-12 col-sm-6">
+              <p class="bin-guide-section-label accept">✅ <%= lang === 'de' ? 'Gehört rein' : 'Goes in' %></p>
+              <ul class="bin-guide-list">
+                <li>🧴 <%= lang === 'de' ? 'Plastikverpackungen' : 'Plastic packaging' %></li>
+                <li>🍫 <%= lang === 'de' ? 'Alufolie' : 'Aluminum foil' %></li>
+                <li>🥛 <%= lang === 'de' ? 'Joghurtbecher' : 'Yogurt cups' %></li>
+                <li>🍶 <%= lang === 'de' ? 'Plastikflaschen (kein Pfand)' : 'Plastic bottles (no deposit)' %></li>
+                <li>🧃 Tetrapaks</li>
+                <li>🥫 <%= lang === 'de' ? 'Metalldosen' : 'Metal cans' %></li>
+                <li>📦 <%= lang === 'de' ? 'Styroporverpackungen' : 'Styrofoam packaging' %></li>
+              </ul>
+            </div>
+            <div class="col-12 col-sm-6">
+              <p class="bin-guide-section-label reject">❌ <%= lang === 'de' ? 'Gehört NICHT rein' : 'Does NOT go in' %></p>
+              <ul class="bin-guide-list">
+                <li>📰 <%= lang === 'de' ? 'Papier' : 'Paper' %></li>
+                <li>🍾 <%= lang === 'de' ? 'Glas' : 'Glass' %></li>
+                <li>🍌 <%= lang === 'de' ? 'Lebensmittelreste' : 'Food waste' %></li>
+                <li>🔋 <%= lang === 'de' ? 'Batterien' : 'Batteries' %></li>
+                <li>💻 <%= lang === 'de' ? 'Elektronik' : 'Electronics' %></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Papier ── -->
+    <div class="bin-guide-card" style="--bin-color: #1565C0;">
+      <button class="bin-guide-header collapsed" data-bs-toggle="collapse" data-bs-target="#guidePapier">
+        <span class="bin-guide-dot" style="background:#1565C0;"></span>
+        <span class="bin-guide-emoji">📦</span>
+        <div class="bin-guide-title">
+          <strong>Papier</strong>
+          <span class="text-muted fw-normal" style="font-size:0.8rem;"> · Blue Bin</span>
+        </div>
+        <i class="bi bi-chevron-down bin-guide-chevron ms-auto"></i>
+      </button>
+      <div id="guidePapier" class="collapse" data-bs-parent="#binGuide">
+        <div class="bin-guide-body">
+          <div class="row g-3">
+            <div class="col-12 col-sm-6">
+              <p class="bin-guide-section-label accept">✅ <%= lang === 'de' ? 'Gehört rein' : 'Goes in' %></p>
+              <ul class="bin-guide-list">
+                <li>📰 <%= lang === 'de' ? 'Zeitungen & Zeitschriften' : 'Newspapers & magazines' %></li>
+                <li>📦 <%= lang === 'de' ? 'Kartonagen' : 'Cardboard boxes' %></li>
+                <li>🗒️ <%= lang === 'de' ? 'Papierverpackungen' : 'Paper packaging' %></li>
+                <li>🥚 <%= lang === 'de' ? 'Eierkartons' : 'Egg cartons' %></li>
+                <li>📋 <%= lang === 'de' ? 'Kataloge & Prospekte' : 'Catalogs & flyers' %></li>
+              </ul>
+            </div>
+            <div class="col-12 col-sm-6">
+              <p class="bin-guide-section-label reject">❌ <%= lang === 'de' ? 'Gehört NICHT rein' : 'Does NOT go in' %></p>
+              <ul class="bin-guide-list">
+                <li>🍕 <%= lang === 'de' ? 'Fettige Pizzakartons' : 'Dirty/greasy pizza boxes' %></li>
+                <li>🤧 <%= lang === 'de' ? 'Taschentücher' : 'Tissues' %></li>
+                <li>🖨️ <%= lang === 'de' ? 'Laminiertes Papier' : 'Laminated paper' %></li>
+                <li>🧴 <%= lang === 'de' ? 'Plastik' : 'Plastic' %></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Restmüll ── -->
+    <div class="bin-guide-card" style="--bin-color: #616161;">
+      <button class="bin-guide-header collapsed" data-bs-toggle="collapse" data-bs-target="#guideRestmuell">
+        <span class="bin-guide-dot" style="background:#616161;"></span>
+        <span class="bin-guide-emoji">🗑️</span>
+        <div class="bin-guide-title">
+          <strong>Restmüll</strong>
+          <span class="text-muted fw-normal" style="font-size:0.8rem;"> · Grey Bin</span>
+        </div>
+        <i class="bi bi-chevron-down bin-guide-chevron ms-auto"></i>
+      </button>
+      <div id="guideRestmuell" class="collapse" data-bs-parent="#binGuide">
+        <div class="bin-guide-body">
+          <div class="row g-3">
+            <div class="col-12 col-sm-6">
+              <p class="bin-guide-section-label accept">✅ <%= lang === 'de' ? 'Gehört rein' : 'Goes in' %></p>
+              <ul class="bin-guide-list">
+                <li>🤧 <%= lang === 'de' ? 'Taschentücher' : 'Tissues' %></li>
+                <li>🗒️ <%= lang === 'de' ? 'Beschmutztes Papier' : 'Dirty paper' %></li>
+                <li>🧼 <%= lang === 'de' ? 'Hygieneprodukte' : 'Hygiene products' %></li>
+                <li>🏺 <%= lang === 'de' ? 'Kaputte Keramik' : 'Broken ceramics' %></li>
+                <li>🧹 <%= lang === 'de' ? 'Staubsaugerbeutel' : 'Vacuum cleaner bags' %></li>
+                <li>🚬 <%= lang === 'de' ? 'Zigarettenstummel' : 'Cigarette butts' %></li>
+              </ul>
+            </div>
+            <div class="col-12 col-sm-6">
+              <p class="bin-guide-section-label reject">❌ <%= lang === 'de' ? 'Gehört NICHT rein' : 'Does NOT go in' %></p>
+              <ul class="bin-guide-list">
+                <li>♻️ <%= lang === 'de' ? 'Recyclingfähige Materialien' : 'Recyclable materials' %></li>
+                <li>🌿 <%= lang === 'de' ? 'Bioabfälle' : 'Organic waste' %></li>
+                <li>🍾 <%= lang === 'de' ? 'Glas (→ Glascontainer)' : 'Glass (→ glass container)' %></li>
+                <li>🔋 <%= lang === 'de' ? 'Batterien (→ Sonderabfall)' : 'Batteries (→ special waste)' %></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BioMüll ── -->
+    <div class="bin-guide-card" style="--bin-color: #2E7D32;">
+      <button class="bin-guide-header collapsed" data-bs-toggle="collapse" data-bs-target="#guideBiomuell">
+        <span class="bin-guide-dot" style="background:#2E7D32;"></span>
+        <span class="bin-guide-emoji">🌿</span>
+        <div class="bin-guide-title">
+          <strong>BioMüll</strong>
+          <span class="text-muted fw-normal" style="font-size:0.8rem;"> · Green Bin</span>
+        </div>
+        <i class="bi bi-chevron-down bin-guide-chevron ms-auto"></i>
+      </button>
+      <div id="guideBiomuell" class="collapse" data-bs-parent="#binGuide">
+        <div class="bin-guide-body">
+          <div class="row g-3">
+            <div class="col-12 col-sm-6">
+              <p class="bin-guide-section-label accept">✅ <%= lang === 'de' ? 'Gehört rein' : 'Goes in' %></p>
+              <ul class="bin-guide-list">
+                <li>🍱 <%= lang === 'de' ? 'Essensreste' : 'Food leftovers' %></li>
+                <li>🍌 <%= lang === 'de' ? 'Obstschalen' : 'Fruit peels' %></li>
+                <li>🥦 <%= lang === 'de' ? 'Gemüseabschnitte' : 'Vegetable scraps' %></li>
+                <li>☕ <%= lang === 'de' ? 'Kaffeesatz & Filter' : 'Coffee grounds & filters' %></li>
+                <li>🫖 <%= lang === 'de' ? 'Teebeutel' : 'Tea bags' %></li>
+                <li>🥚 <%= lang === 'de' ? 'Eierschalen' : 'Egg shells' %></li>
+              </ul>
+            </div>
+            <div class="col-12 col-sm-6">
+              <p class="bin-guide-section-label reject">❌ <%= lang === 'de' ? 'Gehört NICHT rein' : 'Does NOT go in' %></p>
+              <ul class="bin-guide-list">
+                <li>🧴 <%= lang === 'de' ? 'Plastik' : 'Plastic' %></li>
+                <li>📦 <%= lang === 'de' ? 'Verpackungen' : 'Packaging' %></li>
+                <li>🥫 <%= lang === 'de' ? 'Metall' : 'Metal' %></li>
+                <li>🍾 <%= lang === 'de' ? 'Glas' : 'Glass' %></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.accordion -->
+</div><!-- /.bin-guide -->
+

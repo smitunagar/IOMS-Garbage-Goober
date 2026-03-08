@@ -1,0 +1,8 @@
+<div class="auth-page">
+  <div class="auth-card text-center">
+    <div class="display-1 mb-3">😔</div>
+    <h4 class="fw-bold text-danger">Error <%= typeof status !== 'undefined' ? status : '' %></h4>
+    <p class="text-muted"><%= message || 'An unexpected error occurred.' %></p>
+    <a href="/" class="btn btn-primary">← Back to home</a>
+  </div>
+</div>

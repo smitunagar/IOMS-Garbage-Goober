@@ -1,0 +1,211 @@
+<div class="mb-4">
+  <a href="/admin" class="text-muted small text-decoration-none">
+    <i class="bi bi-arrow-left me-1"></i> <%= t('navAdmin') %>
+  </a>
+  <h4 class="fw-bold mt-2"><%= t('rotationScreenTitle', { floor: floorId }) %></h4>
+</div>
+
+<!-- ── Flash messages ─────────────────────────────────────────────────────── -->
+<% if (locals.flash) { %>
+  <% if (flash.success) { %>
+    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+      <%= flash.success %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% } %>
+  <% if (flash.error) { %>
+    <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+      <%= flash.error %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% } %>
+<% } %>
+
+<!-- ── Current duty ────────────────────────────────────────────────────────── -->
+<div class="stat-card mb-3">
+  <h6 class="fw-semibold mb-2"><%= t('dutyThisWeek') %></h6>
+  <% if (dutyRoom) { %>
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <span class="fs-2 fw-bold text-primary-custom"><%= dutyRoom %></span>
+      <span class="text-muted small"><%= t('dutyRoomNumber', { room: dutyRoom }) %></span>
+      <% if (dutySource === 'override') { %>
+        <span class="badge bg-warning text-dark"><i class="bi bi-shield-exclamation me-1"></i><%= t('dutySourceOverride') %></span>
+      <% } else if (dutySource === 'pending') { %>
+        <span class="badge bg-info text-dark"><i class="bi bi-clock-history me-1"></i><%= t('dutySourcePending') %></span>
+      <% } else { %>
+        <span class="badge bg-success"><i class="bi bi-arrow-repeat me-1"></i><%= t('dutySourceNormal') %></span>
+      <% } %>
+    </div>
+    <div class="text-muted small mt-1">
+      <i class="bi bi-lock-fill me-1"></i><%= t('weekLockNote') %>
+    </div>
+  <% } else { %>
+    <p class="text-muted small mb-0"><%= t('noDutyAssigned') %></p>
+  <% } %>
+</div>
+
+<!-- ── Pending queue ──────────────────────────────────────────────────────── -->
+<div class="stat-card mb-3">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h6 class="fw-semibold mb-0">
+      <i class="bi bi-hourglass-split me-1 text-warning"></i>
+      <%= t('pendingQueueTitle') %>
+      <% if (pendingQueue.length > 0) { %>
+        <span class="badge bg-warning text-dark ms-1"><%= pendingQueue.length %></span>
+      <% } %>
+    </h6>
+  </div>
+  <% if (pendingQueue.length === 0) { %>
+    <p class="text-muted small mb-0"><%= t('pendingQueueEmpty') %></p>
+  <% } else { %>
+    <div class="list-group list-group-flush">
+      <% pendingQueue.forEach((pq, idx) => { %>
+        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0 border-bottom">
+          <div>
+            <span class="fw-bold text-muted small me-2">#<%= idx + 1 %></span>
+            <span class="badge bg-secondary me-2"><%= t('roomNumberLabel', { room: pq.room_number }) %></span>
+            <span class="text-muted small">
+              <%= t('pendingSkippedWeek', { week: pq.skipped_week_start }) %>
+            </span>
+          </div>
+          <form method="POST" action="/admin/rotation/<%= floorId %>/clear-pending"
+                onsubmit="return confirm('<%= t('confirmRemovePending') %>')">
+            <input type="hidden" name="pendingId" value="<%= pq.id %>">
+            <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </form>
+        </div>
+      <% }); %>
+    </div>
+    <p class="text-muted small mt-2 mb-0">
+      <i class="bi bi-info-circle me-1"></i><%= t('pendingQueueHint') %>
+    </p>
+  <% } %>
+</div>
+
+<!-- ── Holiday management ─────────────────────────────────────────────────── -->
+<div class="stat-card mb-3">
+  <h6 class="fw-semibold mb-3">
+    <i class="bi bi-calendar-x me-1 text-danger"></i>
+    <%= t('holidayManagementTitle') %>
+  </h6>
+
+  <form method="POST" action="/admin/rotation/<%= floorId %>/add-holiday" class="mb-4">
+    <div class="row g-2">
+      <div class="col-12 col-sm-4">
+        <label class="form-label small fw-semibold"><%= t('holidayRoomLabel') %></label>
+        <select name="roomNumber" class="form-select form-select-sm" required>
+          <option value=""><%= t('selectRoom') %></option>
+          <% rooms.forEach(room => { %>
+            <option value="<%= room.room_number %>"><%= room.room_number %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="col-6 col-sm-3">
+        <label class="form-label small fw-semibold"><%= t('holidayStartLabel') %></label>
+        <input type="date" name="startDate" class="form-control form-control-sm" required>
+      </div>
+      <div class="col-6 col-sm-3">
+        <label class="form-label small fw-semibold"><%= t('holidayEndLabel') %></label>
+        <input type="date" name="endDate" class="form-control form-control-sm" required>
+      </div>
+      <div class="col-12 col-sm-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-sm btn-danger w-100">
+          <i class="bi bi-plus-lg me-1"></i><%= t('addHolidayButton') %>
+        </button>
+      </div>
+      <div class="col-12">
+        <input type="text" name="note" class="form-control form-control-sm"
+               placeholder="<%= t('holidayNotePlaceholder') %>">
+      </div>
+    </div>
+  </form>
+
+  <% if (holidays.length === 0) { %>
+    <p class="text-muted small mb-0"><%= t('noHolidaysSet') %></p>
+  <% } else { %>
+    <div class="list-group list-group-flush">
+      <% holidays.forEach(h => { %>
+        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2 border-0 border-bottom">
+          <div>
+            <span class="badge bg-danger me-2"><%= t('roomNumberLabel', { room: h.room_number }) %></span>
+            <span class="fw-semibold small"><%= h.start_date %> &ndash; <%= h.end_date %></span>
+            <% if (h.note) { %>
+              <span class="text-muted small ms-2">(<%= h.note %>)</span>
+            <% } %>
+            <% if (h.created_by) { %>
+              <span class="text-muted small ms-2"><i class="bi bi-person me-1"></i><%= h.created_by %></span>
+            <% } %>
+          </div>
+          <form method="POST" action="/admin/rotation/<%= floorId %>/remove-holiday"
+                onsubmit="return confirm('<%= t('confirmRemoveHoliday') %>')">
+            <input type="hidden" name="holidayId" value="<%= h.id %>">
+            <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </form>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</div>
+
+<!-- ── Anchor date & Override ─────────────────────────────────────────────── -->
+<form method="POST" action="/admin/rotation/<%= floorId %>">
+  <div class="stat-card mb-3">
+    <h6 class="fw-semibold mb-1"><%= t('anchorDateTitle') %></h6>
+    <p class="text-muted small mb-2"><%= t('anchorDateSubtitle') %></p>
+    <input type="date" name="anchorDate" class="form-control"
+           value="<%= anchor ? anchor.anchor_start_monday : '' %>"
+           required>
+    <% if (anchor && anchor.updated_by) { %>
+      <div class="form-text">
+        <%= t('lastModified', { date: anchor.updated_at || '–' }) %> (by <%= anchor.updated_by %>)
+      </div>
+    <% } %>
+  </div>
+
+  <div class="stat-card mb-3">
+    <h6 class="fw-semibold mb-1">
+      <i class="bi bi-shield-exclamation me-1 text-warning"></i>
+      <%= t('manualOverrideTitle') %>
+    </h6>
+    <p class="text-muted small mb-2"><%= t('manualOverrideSubtitle') %></p>
+    <select name="overrideRoom" class="form-select">
+      <option value=""><%= t('noOverrideAutoRotation') %></option>
+      <% activeRooms.forEach(r => { %>
+        <option value="<%= r %>">Room <%= r %></option>
+      <% }); %>
+    </select>
+    <div class="form-text text-warning small mt-1">
+      <i class="bi bi-exclamation-triangle me-1"></i><%= t('overrideCurrentWeekOnly') %>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary w-100 mb-4">
+    <i class="bi bi-check-lg me-1"></i> <%= t('saveChangesButton') %>
+  </button>
+</form>
+
+<!-- ── Room toggles ────────────────────────────────────────────────────────── -->
+<div class="stat-card">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h6 class="fw-semibold mb-0"><%= t('roomToggleTitle') %></h6>
+    <span class="text-muted small">
+      <%= t('roomToggleSubtitle', {
+        active: rooms.filter(r => r.is_active).length,
+        inactive: rooms.filter(r => !r.is_active).length
+      }) %>
+    </span>
+  </div>
+  <div class="room-grid">
+    <% rooms.forEach(room => { %>
+      <div class="room-cell <%= room.is_active ? 'active' : 'inactive' %>"
+           onclick="toggleRoomActive(<%= room.room_number %>, <%= floorId %>)"
+           title="<%= room.is_active ? t('active') : t('inactive') %>">
+        <%= room.room_number %>
+      </div>
+    <% }); %>
+  </div>
+</div>

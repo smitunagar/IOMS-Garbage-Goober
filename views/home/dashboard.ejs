@@ -1,0 +1,108 @@
+<!-- ── Greeting header ────────────────────────────────────────────────── -->
+<div class="mb-4">
+  <h4 class="fw-bold mb-1">
+    <%= t('greetingHello', { name: user.name || t('residentFallbackName') }) %>
+  </h4>
+  <p class="text-muted small mb-0">
+    <%= t('roomFloorInfo', { roomId: user.room_id, floorId: user.floor_id }) %>
+  </p>
+</div>
+
+<!-- ── Open alerts banner ────────────────────────────────────────────── -->
+<% if (openAlerts.length > 0) { %>
+  <div class="alerts-banner mb-3">
+    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+    <%= t('binAlertBanner', { count: openAlerts.length }) %>
+  </div>
+<% } %>
+
+<div class="row g-3">
+  <!-- ── Duty card ─────────────────────────────────────────────────── -->
+  <div class="col-12 col-md-6">
+    <div class="duty-card <%= isYourTurn ? 'your-turn' : '' %>">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <div class="small opacity-75"><%= t('dutyThisWeek') %></div>
+        <% if (isYourTurn) { %>
+          <span class="info-pill"><%= t('dutyYourTurn') %></span>
+        <% } %>
+      </div>
+      <% if (dutyRoom) { %>
+        <div class="room-number"><%= dutyRoom %></div>
+        <div class="small opacity-75"><%= t('dutyRoomNumber', { room: dutyRoom }) %></div>
+        <div class="d-flex gap-2 mt-3">
+          <span class="info-pill"><i class="bi bi-calendar3 me-1"></i><%= weekLabel %></span>
+          <span class="info-pill"><i class="bi bi-hourglass-split me-1"></i><%= t('daysRemaining', { days: daysLeft }) %></span>
+        </div>
+      <% } else { %>
+        <div class="small opacity-75"><%= t('dutyLoading') %></div>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- ── Disposals this week ───────────────────────────────────────── -->
+  <div class="col-12 col-md-6">
+    <div class="stat-card h-100">
+      <h6 class="fw-semibold mb-3"><%= t('thisWeekDisposals') %></h6>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <% Object.entries(BIN_TYPES).forEach(([key, bt]) => { %>
+          <div class="d-flex align-items-center gap-1 small">
+            <span><%= bt.emoji %></span>
+            <span class="fw-bold" style="color:<%= bt.color %>"><%= binCounts[key] || 0 %></span>
+          </div>
+        <% }); %>
+      </div>
+      <div class="text-muted small">
+        <%= t('totalDisposals', { count: disposals.length }) %>
+        <% if (lastDisposal) { %>
+          · <%= t('lastTime', { time: fmtDateTime(new Date(lastDisposal.created_at)) }) %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Quick actions ─────────────────────────────────────────────── -->
+  <div class="col-12">
+    <div class="row g-2">
+      <div class="col-4">
+        <a href="/disposal/log" class="quick-action" style="border-color: #2E7D32; color: #2E7D32;">
+          <i class="bi bi-plus-circle"></i>
+          <span class="d-none d-sm-inline"><%= t('logDisposalAction') %></span>
+        </a>
+      </div>
+      <div class="col-4">
+        <a href="/alerts/report" class="quick-action" style="border-color: #E65100; color: #E65100;">
+          <i class="bi bi-megaphone"></i>
+          <span class="d-none d-sm-inline"><%= t('reportBinFullAction') %></span>
+        </a>
+      </div>
+      <div class="col-4">
+        <a href="/history" class="quick-action" style="border-color: #1565C0; color: #1565C0;">
+          <i class="bi bi-clock-history"></i>
+          <span class="d-none d-sm-inline"><%= t('showHistoryAction') %></span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Upcoming duty ─────────────────────────────────────────────── -->
+  <% if (upcoming.length > 0) { %>
+  <div class="col-12">
+    <div class="stat-card">
+      <h6 class="fw-semibold mb-3"><%= t('upcomingWeeksTitle') %></h6>
+      <div class="list-group list-group-flush">
+        <% upcoming.forEach(entry => { %>
+          <div class="list-group-item d-flex justify-content-between align-items-center px-0 border-0">
+            <div>
+              <span class="fw-semibold"><%= t('roomNumberLabel', { room: entry.room }) %></span>
+              <% if (entry.room === user.room_id) { %>
+                <span class="badge bg-success ms-1"><%= t('dutyYourTurn') %></span>
+              <% } %>
+            </div>
+            <span class="text-muted small"><%= entry.label %></span>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+  <% } %>
+</div>

@@ -1,0 +1,71 @@
+<div class="mb-4">
+  <a href="/admin" class="text-muted small text-decoration-none">
+    <i class="bi bi-arrow-left me-1"></i> <%= t('navAdmin') %>
+  </a>
+  <h4 class="fw-bold mt-2"><%= t('complianceReportTitle') %></h4>
+</div>
+
+<!-- ── Floor filter ──────────────────────────────────────────────────── -->
+<div class="d-flex gap-1 mb-3 flex-wrap">
+  <a href="/admin/compliance"
+     class="btn btn-sm <%= !filterFloor ? 'btn-primary' : 'btn-outline-secondary' %>">
+    <%= t('filterAll') %>
+  </a>
+  <% for (let f = 1; f <= totalFloors; f++) { %>
+    <a href="/admin/compliance?floor=<%= f %>"
+       class="btn btn-sm <%= filterFloor === f ? 'btn-primary' : 'btn-outline-secondary' %>">
+      <%= t('floorChipLabel', { floor: f }) %>
+    </a>
+  <% } %>
+</div>
+
+<!-- ── Legend ─────────────────────────────────────────────────────────── -->
+<div class="d-flex gap-3 mb-3 small">
+  <span><span class="badge bg-danger">&nbsp;</span> <%= t('legendZeroDisposals') %></span>
+  <span><span class="badge bg-warning">&nbsp;</span> <%= t('legendOneDisposal') %></span>
+  <span><span class="badge bg-success">&nbsp;</span> <%= t('legendTwoPlusDisposals') %></span>
+</div>
+
+<% if (weeks.length === 0) { %>
+  <div class="empty-state">
+    <i class="bi bi-bar-chart"></i>
+    <p><%= t('noDataFound') %></p>
+  </div>
+<% } else { %>
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover bg-white rounded">
+      <thead class="table-light">
+        <tr>
+          <th><%= t('columnWeek') %></th>
+          <th><%= t('columnFloor') %></th>
+          <th><%= t('columnDisposed') %></th>
+          <th><%= t('columnAlerts') %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% weeks.forEach(w => { %>
+          <tr>
+            <td><%= w.weekLabel %><br><small class="text-muted"><%= w.weekStart %> – <%= w.weekEnd %></small></td>
+            <td><%= t('floorChipLabel', { floor: w.floorId }) %></td>
+            <td>
+              <% if (w.disposalCount === 0) { %>
+                <span class="badge bg-danger"><%= w.disposalCount %></span>
+              <% } else if (w.disposalCount === 1) { %>
+                <span class="badge bg-warning text-dark"><%= w.disposalCount %></span>
+              <% } else { %>
+                <span class="badge bg-success"><%= w.disposalCount %></span>
+              <% } %>
+            </td>
+            <td>
+              <% if (w.alertCount > 0) { %>
+                <span class="badge bg-danger"><%= w.alertCount %></span>
+              <% } else { %>
+                <span class="text-muted">0</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
