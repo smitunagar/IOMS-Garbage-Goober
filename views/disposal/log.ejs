@@ -63,17 +63,18 @@
 
   <!-- ── Photo upload ────────────────────────────────────────────────── -->
   <div class="stat-card mb-3">
-    <h6 class="fw-semibold mb-2"><%= t('photoProofOptional') %></h6>
-    <input type="file" name="photo" class="form-control" accept="image/*">
-  </div>
-
-  <!-- ── QR verification ─────────────────────────────────────────────── -->
-  <div class="stat-card mb-4">
-    <h6 class="fw-semibold mb-2"><%= t('qrVerifyRequired') %></h6>
-    <input type="text" name="qrCode" class="form-control" required
-           placeholder="<%= t('qrCodeInputHint') %>">
+    <h6 class="fw-semibold mb-2">
+      <%= lang === 'de' ? '📸 Foto als Nachweis (Pflicht)' : '📸 Photo proof (required)' %>
+    </h6>
+    <input type="file" name="photo" class="form-control" accept="image/*" capture="environment" required onchange="previewPhoto(this)">
     <div class="form-text text-muted small mt-1">
-      <i class="bi bi-qr-code me-1"></i> QR-Code: IOMS-F<%= user.floor_id %>-2024
+      <i class="bi bi-camera me-1"></i>
+      <%= lang === 'de' ? 'Mach ein Foto der geleerten Müllbehälter.' : 'Take a photo of the emptied bins.' %>
+    </div>
+
+    <!-- Preview -->
+    <div id="photoPreview" style="display:none;" class="mt-2">
+      <img id="photoPreviewImg" src="" alt="Preview" class="img-thumbnail" style="max-height:180px;">
     </div>
   </div>
 
