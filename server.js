@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const compression = require('compression');
 const expressLayouts = require('express-ejs-layouts');
 const session = require('express-session');
 const path = require('path');
@@ -11,6 +12,9 @@ const { i18nMiddleware } = require('./middleware/i18n');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ── Gzip compression ─────────────────────────────────────────────────────────
+app.use(compression());
 
 // ── View engine ──────────────────────────────────────────────────────────────
 app.set('view engine', 'ejs');
@@ -82,6 +86,7 @@ app.use('/history', require('./routes/history'));
 app.use('/admin', require('./routes/admin'));
 app.use('/floor-speaker', require('./routes/floor_speaker'));
 app.use('/api', require('./routes/ai_scanner'));
+app.use('/holidays', require('./routes/holidays'));
 
 // Root redirect
 app.get('/', (req, res) => {

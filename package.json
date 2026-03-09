@@ -15,11 +15,13 @@
     "test:load:smoke": "k6 run tests/load/smoke.js",
     "test:load:login": "k6 run tests/load/login.js",
     "test:load:disposal": "k6 run tests/load/disposal.js",
-    "test:seed": "node tests/helpers/seed.js"
+    "test:seed": "node tests/helpers/seed.js",
+    "db:reset": "node scripts/reset-for-production.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^2.4.3",
+    "compression": "^1.8.1",
     "connect-pg-simple": "^10.0.0",
     "dotenv": "^17.3.1",
     "ejs": "^3.1.10",

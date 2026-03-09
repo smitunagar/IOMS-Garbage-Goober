@@ -10,7 +10,7 @@ const router = express.Router();
 /* ── GET /login ──────────────────────────────────────────────────────────── */
 router.get('/login', (req, res) => {
   if (req.session.userId) return res.redirect('/home');
-  res.render('auth/login', { layout: 'layout', pageTitle: 'Login' });
+  res.render('auth/login', { layout: 'layout', pageTitle: 'Login', query: req.query });
 });
 
 /* ── POST /login ─────────────────────────────────────────────────────────── */
@@ -205,7 +205,66 @@ router.post('/set-language', async (req, res) => {
   }
   res.redirect(req.headers.referer || '/');
 });
+/* ── POST /account/delete ────────────────────────────────────────────────── */
+router.post('/account/delete', async (req, res) => {
+  if (!req.session.userId) return res.redirect('/login');
+  const t = res.locals.t;
+  const { password } = req.body;
+  const userId = req.session.userId;
 
+  if (!password) {
+    req.session.flash = { error: t('deleteAccountPasswordRequired') };
+    return req.session.save(() => res.redirect(req.headers.referer || '/home'));
+  }
+
+  let user;
+  try {
+    user = await db().queryOne('SELECT * FROM users WHERE id = $1', [userId]);
+  } catch (err) {
+    console.error('Delete account fetch error:', err);
+    req.session.flash = { error: t('errorGeneric', { error: 'Database error' }) };
+    return req.session.save(() => res.redirect(req.headers.referer || '/home'));
+  }
+
+  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    req.session.flash = { error: t('deleteAccountWrongPassword') };
+    return req.session.save(() => res.redirect(req.headers.referer || '/home'));
+  }
+
+  if (user.is_admin) {
+    req.session.flash = { error: t('deleteAccountAdminNotAllowed') };
+    return req.session.save(() => res.redirect(req.headers.referer || '/home'));
+  }
+
+  try {
+    // Delete FK-constrained records first
+    await db().run('DELETE FROM disposal_events WHERE user_id = $1', [userId]);
+    await db().run('DELETE FROM bin_alerts WHERE user_id = $1', [userId]);
+    // Clean up duty-related records for this room
+    if (user.floor_id && user.room_id) {
+      await db().run(
+        'DELETE FROM room_holidays WHERE floor_id = $1 AND room_id = $2',
+        [user.floor_id, user.room_id]
+      );
+      await db().run(
+        'DELETE FROM pending_duty_queue WHERE floor_id = $1 AND room_id = $2',
+        [user.floor_id, user.room_id]
+      );
+      await db().run(
+        'DELETE FROM duty_schedule WHERE floor_id = $1 AND room_id = $2',
+        [user.floor_id, user.room_id]
+      );
+    }
+    // Finally delete the user
+    await db().run('DELETE FROM users WHERE id = $1', [userId]);
+  } catch (err) {
+    console.error('Delete account DB error:', err);
+    req.session.flash = { error: t('errorGeneric', { error: err.message }) };
+    return req.session.save(() => res.redirect(req.headers.referer || '/home'));
+  }
+
+  req.session.destroy(() => res.redirect('/login?deleted=1'));
+});
 /* ── GET /logout ─────────────────────────────────────────────────────────── */
 router.get('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/login'));

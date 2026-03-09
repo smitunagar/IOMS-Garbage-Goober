@@ -63,22 +63,28 @@
   <!-- ── Quick actions ─────────────────────────────────────────────── -->
   <div class="col-12">
     <div class="row g-2">
-      <div class="col-4">
+      <div class="col-6 col-sm-3">
         <a href="/disposal/log" class="quick-action" style="border-color: #2E7D32; color: #2E7D32;">
           <i class="bi bi-plus-circle"></i>
           <span class="d-none d-sm-inline"><%= t('logDisposalAction') %></span>
         </a>
       </div>
-      <div class="col-4">
+      <div class="col-6 col-sm-3">
         <a href="/alerts/report" class="quick-action" style="border-color: #E65100; color: #E65100;">
           <i class="bi bi-megaphone"></i>
           <span class="d-none d-sm-inline"><%= t('reportBinFullAction') %></span>
         </a>
       </div>
-      <div class="col-4">
+      <div class="col-6 col-sm-3">
         <a href="/history" class="quick-action" style="border-color: #1565C0; color: #1565C0;">
           <i class="bi bi-clock-history"></i>
           <span class="d-none d-sm-inline"><%= t('showHistoryAction') %></span>
+        </a>
+      </div>
+      <div class="col-6 col-sm-3">
+        <a href="/holidays" class="quick-action" style="border-color: #6A1B9A; color: #6A1B9A;">
+          <i class="bi bi-airplane-fill"></i>
+          <span class="d-none d-sm-inline"><%= t('applyHolidayAction') %></span>
         </a>
       </div>
     </div>

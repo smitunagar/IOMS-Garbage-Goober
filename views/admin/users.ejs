@@ -1,0 +1,296 @@
+<!-- ── Back nav ───────────────────────────────────────────────────────────── -->
+<div class="mb-3">
+  <a href="/admin" class="text-muted small text-decoration-none">
+    <i class="bi bi-arrow-left me-1"></i> <%= t('navAdmin') %>
+  </a>
+</div>
+
+<!-- ── Header ────────────────────────────────────────────────────────────── -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0"><i class="bi bi-people-fill me-2" style="color:#2E7D32"></i><%= t('adminUsersTitle') %></h4>
+  <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
+    <i class="bi bi-person-plus-fill me-1"></i><%= t('adminAddUserButton') %>
+  </button>
+</div>
+
+<!-- ── Flash ─────────────────────────────────────────────────────────────── -->
+<% if (locals.flash) { %>
+  <% if (flash.success) { %>
+    <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+      <i class="bi bi-check-circle me-1"></i><%= flash.success %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% } %>
+  <% if (flash.error) { %>
+    <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+      <i class="bi bi-exclamation-circle me-1"></i><%= flash.error %>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% } %>
+<% } %>
+
+<!-- ── Stats row ─────────────────────────────────────────────────────────── -->
+<div class="row g-2 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card text-center py-3">
+      <div class="fs-2 fw-bold" style="color:#2E7D32"><%= stats.total %></div>
+      <div class="text-muted small"><i class="bi bi-people me-1"></i><%= t('adminStatTotalUsers') %></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card text-center py-3">
+      <div class="fs-2 fw-bold text-primary"><%= stats.students %></div>
+      <div class="text-muted small"><i class="bi bi-person me-1"></i><%= t('adminStatStudents') %></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card text-center py-3">
+      <div class="fs-2 fw-bold text-warning"><%= stats.floor_speakers %></div>
+      <div class="text-muted small"><i class="bi bi-person-badge me-1"></i><%= t('adminStatFloorSpeakers') %></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card text-center py-3">
+      <div class="fs-2 fw-bold text-danger"><%= stats.suspended %></div>
+      <div class="text-muted small"><i class="bi bi-person-slash me-1"></i><%= t('adminStatSuspended') %></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Search ─────────────────────────────────────────────────────────────── -->
+<div class="mb-3">
+  <div class="input-group input-group-sm">
+    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+    <input type="text" id="userSearch" class="form-control border-start-0 ps-0"
+           placeholder="<%= t('adminUserSearchPlaceholder') %>" oninput="filterUsers()">
+  </div>
+</div>
+
+<!-- ── Users table ────────────────────────────────────────────────────────── -->
+<div class="stat-card p-0 overflow-hidden">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle" id="usersTable">
+      <thead style="background:#f8f9fa;">
+        <tr>
+          <th class="ps-3 py-2 fw-semibold small text-muted"><%= t('adminColUser') %></th>
+          <th class="py-2 fw-semibold small text-muted d-none d-md-table-cell"><%= t('adminColEmail') %></th>
+          <th class="py-2 fw-semibold small text-muted"><%= t('adminColRole') %></th>
+          <th class="py-2 fw-semibold small text-muted d-none d-sm-table-cell"><%= t('adminColFloorRoom') %></th>
+          <th class="py-2 fw-semibold small text-muted"><%= t('adminColStatus') %></th>
+          <th class="py-2 fw-semibold small text-muted d-none d-lg-table-cell"><%= t('adminColActivity') %></th>
+          <th class="pe-3 py-2 fw-semibold small text-muted text-end"><%= t('adminColActions') %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(u => { %>
+        <tr class="user-row" data-name="<%= u.name.toLowerCase() %>" data-email="<%= u.email.toLowerCase() %>">
+          <!-- Name + avatar -->
+          <td class="ps-3 py-2">
+            <div class="d-flex align-items-center gap-2">
+              <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                   style="width:34px;height:34px;min-width:34px;font-size:.85rem;background:<%= u.is_admin ? '#1B4D1F' : u.role === 'floor_speaker' ? '#E65100' : '#1565C0' %>">
+                <%= u.name.charAt(0).toUpperCase() %>
+              </div>
+              <div>
+                <div class="fw-semibold small"><%= u.name %></div>
+                <div class="text-muted" style="font-size:.72rem">ID #<%= u.id %></div>
+              </div>
+            </div>
+          </td>
+          <!-- Email -->
+          <td class="py-2 d-none d-md-table-cell">
+            <span class="small text-muted"><%= u.email %></span>
+          </td>
+          <!-- Role badge -->
+          <td class="py-2">
+            <% if (u.is_admin) { %>
+              <span class="badge" style="background:#1B4D1F"><i class="bi bi-shield-fill-check me-1"></i><%= t('adminRoleAdmin') %></span>
+            <% } else if (u.role === 'floor_speaker') { %>
+              <span class="badge bg-warning text-dark"><i class="bi bi-person-badge me-1"></i><%= t('adminRoleFloorSpeaker') %></span>
+            <% } else { %>
+              <span class="badge bg-secondary"><i class="bi bi-person me-1"></i><%= t('adminRoleStudent') %></span>
+            <% } %>
+          </td>
+          <!-- Floor / Room -->
+          <td class="py-2 d-none d-sm-table-cell">
+            <% if (u.role === 'floor_speaker' && u.managed_floor_id) { %>
+              <span class="small"><i class="bi bi-building me-1 text-muted"></i><%= t('floorChipLabel', { floor: u.managed_floor_id }) %></span>
+            <% } else if (u.floor_id && u.room_id) { %>
+              <span class="small">
+                <i class="bi bi-building me-1 text-muted"></i><%= t('floorChipLabel', { floor: u.floor_id }) %>
+                &nbsp;<i class="bi bi-door-open ms-1 me-1 text-muted"></i><%= C.roomLabel(u.room_id) %>
+              </span>
+            <% } else { %>
+              <span class="text-muted small">—</span>
+            <% } %>
+          </td>
+          <!-- Status -->
+          <td class="py-2">
+            <% if (u.is_suspended && !u.is_admin) { %>
+              <span class="badge bg-danger"><i class="bi bi-slash-circle me-1"></i><%= t('adminStatusRestricted') %></span>
+            <% } else { %>
+              <span class="badge bg-success bg-opacity-75"><i class="bi bi-check-circle me-1"></i><%= t('adminStatusActive') %></span>
+            <% } %>
+          </td>
+          <!-- Activity -->
+          <td class="py-2 d-none d-lg-table-cell">
+            <span class="text-muted small">
+              <i class="bi bi-trash3 me-1"></i><%= u.disposal_count %>
+              &nbsp;<i class="bi bi-exclamation-triangle ms-2 me-1"></i><%= u.alert_count %>
+            </span>
+          </td>
+          <!-- Actions -->
+          <td class="pe-3 py-2 text-end">
+            <% if (!u.is_admin) { %>
+            <div class="d-flex gap-1 justify-content-end">
+              <!-- Suspend / Unsuspend -->
+              <form method="POST" action="/admin/users/<%= u.id %>/suspend"
+                    onsubmit="return confirm('<%= u.is_suspended ? t('adminConfirmUnsuspend') : t('adminConfirmSuspend') %>')">
+                <button type="submit"
+                        class="btn btn-sm <%= u.is_suspended ? 'btn-outline-success' : 'btn-outline-warning' %>"
+                        title="<%= u.is_suspended ? t('adminUnrestrictUser') : t('adminRestrictUser') %>"
+                        style="padding:2px 8px">
+                  <i class="bi bi-<%= u.is_suspended ? 'person-check' : 'person-slash' %>"></i>
+                </button>
+              </form>
+              <!-- Delete -->
+              <form method="POST" action="/admin/users/<%= u.id %>/delete"
+                    onsubmit="return confirm('<%= t('adminConfirmDeleteUser', { name: u.name }) %>')">
+                <button type="submit" class="btn btn-sm btn-outline-danger"
+                        title="<%= t('adminDeleteUser') %>"
+                        style="padding:2px 8px">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </form>
+            </div>
+            <% } else { %>
+              <span class="text-muted small"><i class="bi bi-lock-fill"></i></span>
+            <% } %>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if (users.length === 0) { %>
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-people fs-1 d-block mb-2 opacity-25"></i>
+    <p class="mb-0"><%= t('adminNoUsers') %></p>
+  </div>
+  <% } %>
+
+  <!-- No results row (shown by JS) -->
+  <div id="noSearchResults" class="text-center py-4 text-muted d-none">
+    <i class="bi bi-search fs-4 d-block mb-1 opacity-25"></i>
+    <p class="small mb-0"><%= t('adminNoSearchResults') %></p>
+  </div>
+</div>
+
+<!-- ── Add User Modal ─────────────────────────────────────────────────────── -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="addUserModalLabel">
+          <i class="bi bi-person-plus-fill me-2 text-primary"></i><%= t('adminAddUserButton') %>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="/admin/users/add" id="addUserForm">
+        <div class="modal-body">
+          <div class="row g-2">
+            <div class="col-12">
+              <label class="form-label small fw-semibold"><%= t('fullNameLabel') %></label>
+              <input type="text" name="name" class="form-control form-control-sm" required
+                     placeholder="<%= t('fullNameLabel') %>">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold"><%= t('emailLabel') %></label>
+              <input type="email" name="email" class="form-control form-control-sm" required
+                     placeholder="user@example.com">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold"><%= t('passwordLabel') %></label>
+              <input type="password" name="password" class="form-control form-control-sm" required
+                     placeholder="<%= t('passwordHelperMinChars') %>">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold"><%= t('adminUserRoleLabel') %></label>
+              <select name="role" id="addUserRole" class="form-select form-select-sm" onchange="onRoleChange(this.value)">
+                <option value="student"><%= t('adminRoleStudent') %></option>
+                <option value="floor_speaker"><%= t('adminRoleFloorSpeaker') %></option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold"><%= t('floorLabel') %></label>
+              <select name="floor_id" id="addUserFloor" class="form-select form-select-sm" onchange="onFloorChange(this.value)">
+                <option value=""><%= t('floorLabel') %>…</option>
+                <% for (let f = 1; f <= totalFloors; f++) { %>
+                  <option value="<%= f %>"><%= t('floorChipLabel', { floor: f }) %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="col-6" id="roomPickerWrap">
+              <label class="form-label small fw-semibold"><%= t('roomLabel') %></label>
+              <select name="room_id" id="addUserRoom" class="form-select form-select-sm">
+                <option value=""><%= t('roomLabel') %>…</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+            <%= t('cancelButton') %>
+          </button>
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-person-plus-fill me-1"></i><%= t('adminAddUserButton') %>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Floor → Room dynamic population ──────────────────────────────────────── */
+const FLOOR_ROOMS = <%- JSON.stringify(floorRooms) %>;
+
+function roomLabel(n) {
+  const mod = n % 100;
+  if (mod === 8)  return (n) + '/' + (n + 1);
+  if (mod === 10) return (n) + '/' + (n + 1);
+  return String(n);
+}
+
+function onFloorChange(floorId) {
+  const sel = document.getElementById('addUserRoom');
+  sel.innerHTML = '<option value="">Room…</option>';
+  if (!floorId) return;
+  const rooms = FLOOR_ROOMS[floorId] || [];
+  rooms.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r;
+    opt.textContent = roomLabel(r);
+    sel.appendChild(opt);
+  });
+}
+
+function onRoleChange(role) {
+  const wrap = document.getElementById('roomPickerWrap');
+  wrap.style.display = role === 'floor_speaker' ? 'none' : '';
+}
+
+/* ── Search filter ─────────────────────────────────────────────────────────── */
+function filterUsers() {
+  const q = document.getElementById('userSearch').value.toLowerCase().trim();
+  const rows = document.querySelectorAll('.user-row');
+  let visible = 0;
+  rows.forEach(row => {
+    const match = !q || row.dataset.name.includes(q) || row.dataset.email.includes(q);
+    row.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+  document.getElementById('noSearchResults').classList.toggle('d-none', visible > 0 || !q);
+}
+</script>

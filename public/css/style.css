@@ -928,3 +928,25 @@
 }
 
 
+
+/* ── Delete account button (sidebar footer) ─────────────────────────────── */
+.sidebar-delete-account {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.45rem 1rem;
+  margin-top: 0.35rem;
+  background: transparent;
+  border: 1px solid rgba(239, 83, 80, 0.45);
+  border-radius: 8px;
+  color: #ef9a9a;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.sidebar-delete-account:hover {
+  background: rgba(239, 83, 80, 0.18);
+  color: #ff6b6b;
+  border-color: rgba(239, 83, 80, 0.7);
+}

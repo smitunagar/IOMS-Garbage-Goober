@@ -9,9 +9,9 @@ function getPool() {
   if (!pool) {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      max: 10,
+      max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: 8000,
     });
   }
   return pool;
@@ -134,11 +134,27 @@ async function initDatabase() {
   await p.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'student';
     ALTER TABLE users ADD COLUMN IF NOT EXISTS managed_floor_id INTEGER;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_suspended INTEGER DEFAULT 0;
   `);
 
-  // ── Seed rooms ────────────────────────────────────────────────────────────
-  const { rows: roomRows } = await p.query('SELECT COUNT(*)::int AS cnt FROM rooms');
-  if (roomRows[0].cnt === 0) {
+  // ── Performance indexes ───────────────────────────────────────────────────
+  await p.query(`
+    CREATE INDEX IF NOT EXISTS idx_disposal_floor_date
+      ON disposal_events (floor_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_alerts_floor_resolved
+      ON bin_alerts (floor_id, is_resolved);
+    CREATE INDEX IF NOT EXISTS idx_duty_schedule_floor_week
+      ON duty_schedule (floor_id, week_start);
+    CREATE INDEX IF NOT EXISTS idx_duty_schedule_floor_normal
+      ON duty_schedule (floor_id, is_from_pending, is_override, week_start DESC);
+    CREATE INDEX IF NOT EXISTS idx_pending_duty_floor
+      ON pending_duty_queue (floor_id, is_processed, queued_at);
+    CREATE INDEX IF NOT EXISTS idx_rooms_floor_active
+      ON rooms (floor_id, is_active);
+  `);
+
+  // ── Seed / migrate rooms (idempotent – inserts missing rooms on every start) ─────────
+  {
     const values = [];
     const placeholders = [];
     let idx = 1;
@@ -153,7 +169,6 @@ async function initDatabase() {
       `INSERT INTO rooms (room_number, floor_id) VALUES ${placeholders.join(', ')} ON CONFLICT DO NOTHING`,
       values
     );
-    console.log(`Seeded ${TOTAL_FLOORS * 14} rooms (14 per floor, X09 and X11 merged).`);
   }
 
   // ── Remove merged rooms (X09 and X11 are part of X08/X09 and X10/X11) ──────

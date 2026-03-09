@@ -51,12 +51,24 @@
       <span class="sidebar-link-icon"><i class="bi bi-clock-history"></i></span>
       <span class="sidebar-link-label"><%= t('navHistory') %></span>
     </a>
+    <a class="sidebar-link <%= path.startsWith('/holidays') ? 'active' : '' %>" href="/holidays">
+      <span class="sidebar-link-icon"><i class="bi bi-airplane-fill"></i></span>
+      <span class="sidebar-link-label"><%= t('navHoliday') %></span>
+    </a>
 
     <% if (user && user.is_admin) { %>
     <div class="sidebar-section-label">Admin</div>
-    <a class="sidebar-link <%= path.startsWith('/admin') ? 'active' : '' %>" href="/admin">
+    <a class="sidebar-link <%= path === '/admin' ? 'active' : '' %>" href="/admin">
       <span class="sidebar-link-icon"><i class="bi bi-shield-fill-check"></i></span>
       <span class="sidebar-link-label"><%= t('navAdmin') %></span>
+    </a>
+    <a class="sidebar-link <%= path.startsWith('/admin/users') ? 'active' : '' %>" href="/admin/users">
+      <span class="sidebar-link-icon"><i class="bi bi-people-fill"></i></span>
+      <span class="sidebar-link-label"><%= t('adminManageUsersButton') %></span>
+    </a>
+    <a class="sidebar-link <%= path.startsWith('/admin/compliance') ? 'active' : '' %>" href="/admin/compliance">
+      <span class="sidebar-link-icon"><i class="bi bi-bar-chart-fill"></i></span>
+      <span class="sidebar-link-label"><%= t('complianceButton') %></span>
     </a>
     <% } %>
 
@@ -80,6 +92,45 @@
     <a class="sidebar-logout" href="/logout">
       <i class="bi bi-box-arrow-left me-2"></i><%= t('logoutButton') %>
     </a>
+    <% if (user && !user.is_admin) { %>
+    <button class="sidebar-delete-account" type="button"
+            data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+      <i class="bi bi-person-x-fill me-2"></i><%= t('deleteAccountButton') %>
+    </button>
+    <% } %>
   </div>
 
 </div>
+
+<!-- ── Delete Account Modal ──────────────────────────────────────────────── -->
+<% if (user && !user.is_admin) { %>
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title text-danger fw-bold" id="deleteAccountModalLabel">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i><%= t('deleteAccountTitle') %>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small mb-3"><%= t('deleteAccountWarning') %></p>
+        <form method="POST" action="/account/delete" id="deleteAccountForm">
+          <label class="form-label fw-semibold"><%= t('deleteAccountPasswordLabel') %></label>
+          <input type="password" name="password" class="form-control mb-1"
+                 placeholder="<%= t('passwordRequired') %>" required autocomplete="current-password">
+          <div class="form-text text-danger"><%= t('deleteAccountIrreversible') %></div>
+        </form>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+          <%= t('cancelButton') %>
+        </button>
+        <button type="submit" form="deleteAccountForm" class="btn btn-danger btn-sm">
+          <i class="bi bi-trash3-fill me-1"></i><%= t('deleteAccountConfirmButton') %>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>

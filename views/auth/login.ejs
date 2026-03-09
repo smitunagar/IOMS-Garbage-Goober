@@ -19,6 +19,16 @@
           <i class="bi bi-exclamation-circle me-1"></i><%= flash.error %>
         </div>
       <% } %>
+      <% if (locals.query && locals.query.deleted === '1') { %>
+        <div class="alert alert-success mb-3" role="alert">
+          <i class="bi bi-check-circle me-1"></i><%= t('deleteAccountSuccessMessage') %>
+        </div>
+      <% } %>
+      <% if (locals.query && locals.query.suspended === '1') { %>
+        <div class="alert alert-warning mb-3" role="alert">
+          <i class="bi bi-slash-circle me-1"></i><%= t('accountSuspendedMessage') %>
+        </div>
+      <% } %>
 
       <form method="POST" action="/login" novalidate>
         <div class="input-float mb-3">

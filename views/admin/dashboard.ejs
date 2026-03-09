@@ -3,11 +3,50 @@
     <h4 class="fw-bold mb-1"><%= t('adminDashboardTitle') %></h4>
     <p class="text-muted small mb-0"><%= weekLabel %></p>
   </div>
-  <a href="/admin/compliance" class="btn btn-outline-primary btn-sm">
-    <i class="bi bi-bar-chart me-1"></i> <%= t('complianceButton') %>
-  </a>
+  <div class="d-flex gap-2">
+    <a href="/admin/users" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-people-fill me-1"></i> <%= t('adminManageUsersButton') %>
+    </a>
+    <a href="/admin/compliance" class="btn btn-outline-primary btn-sm">
+      <i class="bi bi-bar-chart me-1"></i> <%= t('complianceButton') %>
+    </a>
+  </div>
 </div>
 
+<!-- ── User stats row ─────────────────────────────────────────────────────── -->
+<% if (userStats) { %>
+<div class="row g-2 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card text-center py-3">
+      <div class="fs-3 fw-bold" style="color:#2E7D32"><%= userStats.total %></div>
+      <div class="text-muted small"><i class="bi bi-people me-1"></i><%= t('adminStatTotalUsers') %></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card text-center py-3">
+      <div class="fs-3 fw-bold text-primary"><%= userStats.students %></div>
+      <div class="text-muted small"><i class="bi bi-person me-1"></i><%= t('adminStatStudents') %></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card text-center py-3">
+      <div class="fs-3 fw-bold text-warning"><%= userStats.floor_speakers %></div>
+      <div class="text-muted small"><i class="bi bi-person-badge me-1"></i><%= t('adminStatFloorSpeakers') %></div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card text-center py-3">
+      <div class="fs-3 fw-bold text-danger"><%= userStats.suspended %></div>
+      <div class="text-muted small"><i class="bi bi-person-slash me-1"></i><%= t('adminStatSuspended') %></div>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<!-- ── Floor cards ────────────────────────────────────────────────────────── -->
+<h6 class="fw-semibold mb-3 text-muted text-uppercase" style="font-size:0.75rem;letter-spacing:.05em">
+  <i class="bi bi-building me-1"></i><%= t('adminFloorsHeading') %>
+</h6>
 <div class="row g-3">
   <% floors.forEach(floor => { %>
   <div class="col-12 col-sm-6 col-lg-4">

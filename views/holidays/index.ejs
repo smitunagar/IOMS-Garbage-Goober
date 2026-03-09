@@ -1,0 +1,90 @@
+<!-- ── Header ────────────────────────────────────────────────────────────── -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-1"><%= t('holidayPageTitle') %></h4>
+    <p class="text-muted small mb-0"><%= t('holidayRequestSubtitle') %></p>
+  </div>
+</div>
+
+<!-- ── Request form ──────────────────────────────────────────────────────── -->
+<div class="stat-card mb-4">
+  <h6 class="fw-semibold mb-3">
+    <i class="bi bi-calendar-plus me-2" style="color: var(--primary);"></i>
+    <%= t('holidayRequestHeading') %>
+  </h6>
+  <form method="POST" action="/holidays/request">
+    <div class="row g-3">
+      <div class="col-12 col-sm-5">
+        <label class="form-label small fw-semibold"><%= t('holidayStartLabel') %></label>
+        <input type="date" name="startDate" class="form-control"
+               min="<%= today %>" required>
+      </div>
+      <div class="col-12 col-sm-5">
+        <label class="form-label small fw-semibold"><%= t('holidayEndLabel') %></label>
+        <input type="date" name="endDate" class="form-control"
+               min="<%= today %>" required>
+      </div>
+      <div class="col-12 col-sm-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-success w-100">
+          <i class="bi bi-plus-lg me-1"></i><%= t('requestHolidayButton') %>
+        </button>
+      </div>
+      <div class="col-12">
+        <label class="form-label small fw-semibold"><%= t('holidayNotePlaceholder') %></label>
+        <input type="text" name="note" class="form-control"
+               placeholder="<%= t('holidayNoteHint') %>" maxlength="200">
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- ── Info box ──────────────────────────────────────────────────────────── -->
+<div class="alert alert-info d-flex gap-2 align-items-start py-2 mb-4" style="font-size: 0.85rem;">
+  <i class="bi bi-info-circle-fill mt-1 flex-shrink-0"></i>
+  <span><%= t('holidayInfoNote') %></span>
+</div>
+
+<!-- ── Existing holidays list ────────────────────────────────────────────── -->
+<h6 class="fw-semibold mb-3"><%= t('myHolidaysTitle') %></h6>
+
+<% if (holidays.length === 0) { %>
+  <div class="empty-state">
+    <i class="bi bi-calendar-x"></i>
+    <p class="fw-semibold"><%= t('noHolidaysYet') %></p>
+    <p class="small text-muted"><%= t('noHolidaysHint') %></p>
+  </div>
+<% } else { %>
+  <div class="list-group">
+    <% holidays.forEach(h => { %>
+      <div class="list-group-item d-flex justify-content-between align-items-start gap-2">
+        <div class="flex-grow-1">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <%
+              let badgeClass = 'bg-secondary';
+              let badgeLabel = t('holidayStatusPast');
+              if (h.status === 'active')   { badgeClass = 'bg-success';  badgeLabel = t('holidayStatusActive'); }
+              if (h.status === 'upcoming') { badgeClass = 'bg-primary';  badgeLabel = t('holidayStatusUpcoming'); }
+            %>
+            <span class="badge <%= badgeClass %>"><%= badgeLabel %></span>
+            <span class="small fw-semibold">
+              <%= fmtDate(new Date(h.start_date + 'T12:00:00')) %>
+              &nbsp;–&nbsp;
+              <%= fmtDate(new Date(h.end_date + 'T12:00:00')) %>
+            </span>
+          </div>
+          <% if (h.note) { %>
+            <p class="small text-muted mb-0"><i class="bi bi-chat-left-text me-1"></i><em><%= h.note %></em></p>
+          <% } %>
+        </div>
+        <% if (h.status !== 'past') { %>
+          <form method="POST" action="/holidays/cancel/<%= h.id %>"
+                onsubmit="return confirm('<%= t('holidayConfirmCancel') %>')">
+            <button type="submit" class="btn btn-sm btn-outline-danger">
+              <i class="bi bi-x-lg me-1"></i><%= t('holidayCancelButton') %>
+            </button>
+          </form>
+        <% } %>
+      </div>
+    <% }); %>
+  </div>
+<% } %>

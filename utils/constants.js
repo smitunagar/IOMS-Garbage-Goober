@@ -25,6 +25,7 @@ module.exports = {
   /**
    * Rooms X08 and X09 are one combined room → stored as X08, labelled "X08/X09".
    * Rooms X10 and X11 are one combined room → stored as X10, labelled "X10/X11".
+   * Rooms per floor: 101–118 minus 109 and 111 = 16 rooms.
    */
   roomLabel(roomId) {
     const last2 = roomId % 100;
@@ -35,7 +36,7 @@ module.exports = {
   /** Generate all active room IDs for a floor (X09 and X11 are merged, not listed) */
   roomsForFloor(floorId) {
     const rooms = [];
-    for (let i = 1; i <= 16; i++) {
+    for (let i = 1; i <= 18; i++) {
       if (i === 9 || i === 11) continue; // merged into X08/X09 and X10/X11
       rooms.push(floorId * 100 + i);
     }
