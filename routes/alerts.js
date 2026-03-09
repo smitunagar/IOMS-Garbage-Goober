@@ -2,8 +2,6 @@ const express = require('express');
 const db = require('../config/database').getDb;
 const { requireAuth, requireOnboarded } = require('../middleware/auth');
 const { BIN_TYPES, MAX_BIN_ALERTS_PER_DAY } = require('../utils/constants');
-const { getDutyForWeek, getWeekStartStr } = require('../utils/rotation');
-const { sendBinAlert } = require('../utils/whatsapp');
 
 const router = express.Router();
 
@@ -60,38 +58,6 @@ router.post('/report', requireAuth, requireOnboarded, async (req, res) => {
     'INSERT INTO bin_alerts (user_id, floor_id, bin_type, note) VALUES ($1, $2, $3, $4)',
     [user.id, user.floor_id, binType, note || null]
   );
-
-  // ── WhatsApp notification to duty person ─────────────────────────────────
-  try {
-    const weekStr = getWeekStartStr();
-    const dutyRoomId = await getDutyForWeek(db(), user.floor_id, weekStr);
-
-    if (dutyRoomId) {
-      // Find the user who lives in the duty room on this floor
-      const dutyUser = await db().queryOne(
-        'SELECT name, phone, whatsapp_key FROM users WHERE floor_id = $1 AND room_id = $2 AND is_onboarded = 1 LIMIT 1',
-        [user.floor_id, dutyRoomId]
-      );
-
-      if (dutyUser && dutyUser.phone && dutyUser.whatsapp_key) {
-        const bin = BIN_TYPES[binType];
-        // Fire-and-forget — don't block the response
-        sendBinAlert({
-          dutyName:     dutyUser.name,
-          phone:        dutyUser.phone,
-          apiKey:       dutyUser.whatsapp_key,
-          binLabel:     bin.label_de,
-          binEmoji:     bin.emoji,
-          reporterName: user.name,
-          floor:        user.floor_id,
-          note:         note || null,
-        }).catch(err => console.error('[WhatsApp] sendBinAlert failed:', err));
-      }
-    }
-  } catch (err) {
-    // Never block the response if WhatsApp logic fails
-    console.error('[WhatsApp] Notification error:', err);
-  }
 
   req.session.flash = { success: t('alertSentSuccess') };
   res.redirect('/home');

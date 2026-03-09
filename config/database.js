@@ -135,8 +135,6 @@ async function initDatabase() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'student';
     ALTER TABLE users ADD COLUMN IF NOT EXISTS managed_floor_id INTEGER;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS is_suspended INTEGER DEFAULT 0;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
-    ALTER TABLE users ADD COLUMN IF NOT EXISTS whatsapp_key TEXT;
   `);
 
   // ── Performance indexes ───────────────────────────────────────────────────
