@@ -394,9 +394,9 @@ router.post('/users/:id/delete', requireAuth, requireOnboarded, requireAdmin, as
   await db().run('DELETE FROM disposal_events WHERE user_id = $1', [userId]);
   await db().run('DELETE FROM bin_alerts WHERE user_id = $1', [userId]);
   if (user.floor_id && user.room_id) {
-    await db().run('DELETE FROM room_holidays WHERE floor_id = $1 AND room_id = $2',       [user.floor_id, user.room_id]);
-    await db().run('DELETE FROM pending_duty_queue WHERE floor_id = $1 AND room_id = $2',  [user.floor_id, user.room_id]);
-    await db().run('DELETE FROM duty_schedule WHERE floor_id = $1 AND room_id = $2',       [user.floor_id, user.room_id]);
+    await db().run('DELETE FROM room_holidays WHERE floor_id = $1 AND room_number = $2',      [user.floor_id, user.room_id]);
+    await db().run('DELETE FROM pending_duty_queue WHERE floor_id = $1 AND room_number = $2', [user.floor_id, user.room_id]);
+    await db().run('DELETE FROM duty_schedule WHERE floor_id = $1 AND assigned_room = $2',    [user.floor_id, user.room_id]);
   }
   await db().run('DELETE FROM users WHERE id = $1', [userId]);
   invalidateUserCache(userId);

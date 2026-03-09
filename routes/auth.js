@@ -243,15 +243,15 @@ router.post('/account/delete', async (req, res) => {
     // Clean up duty-related records for this room
     if (user.floor_id && user.room_id) {
       await db().run(
-        'DELETE FROM room_holidays WHERE floor_id = $1 AND room_id = $2',
+        'DELETE FROM room_holidays WHERE floor_id = $1 AND room_number = $2',
         [user.floor_id, user.room_id]
       );
       await db().run(
-        'DELETE FROM pending_duty_queue WHERE floor_id = $1 AND room_id = $2',
+        'DELETE FROM pending_duty_queue WHERE floor_id = $1 AND room_number = $2',
         [user.floor_id, user.room_id]
       );
       await db().run(
-        'DELETE FROM duty_schedule WHERE floor_id = $1 AND room_id = $2',
+        'DELETE FROM duty_schedule WHERE floor_id = $1 AND assigned_room = $2',
         [user.floor_id, user.room_id]
       );
     }
