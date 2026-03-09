@@ -9,25 +9,23 @@ const { fmtDateTime } = require('../utils/rotation');
 
 const router = express.Router();
 
-// Configure Cloudinary (uses CLOUDINARY_URL env var or individual vars)
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
 // Multer: memory storage (file held in buffer, uploaded to Cloudinary)
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-  fileFilter: (req, file, cb) => {
-    const allowed = ['.jpg', '.jpeg', '.png', '.webp'];
-    cb(null, allowed.includes(path.extname(file.originalname).toLowerCase()));
-  },
+  limits: { fileSize: 4 * 1024 * 1024 }, // 4 MB (Vercel 4.5 MB body limit)
 });
 
 // Upload buffer to Cloudinary and return secure URL
 function uploadToCloudinary(buffer, mimetype) {
+  // Configure lazily so Vercel env vars are always fresh
+  cloudinary.config({
+    cloud_name:  process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:     process.env.CLOUDINARY_API_KEY,
+    api_secret:  process.env.CLOUDINARY_API_SECRET,
+  });
+  if (!process.env.CLOUDINARY_CLOUD_NAME) {
+    return Promise.reject(new Error('Cloudinary not configured – add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET to Vercel env vars'));
+  }
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       { folder: 'ioms-disposals', resource_type: 'image' },
@@ -132,8 +130,11 @@ router.post('/log', requireAuth, requireOnboarded, upload.array('photos', 4), as
     );
     photoPaths = results.map(r => r.secure_url);
   } catch (err) {
-    console.error('Cloudinary upload error:', err);
-    req.session.flash = { error: lang === 'de' ? 'Foto-Upload fehlgeschlagen. Bitte erneut versuchen.' : 'Photo upload failed. Please try again.' };
+    console.error('Cloudinary upload error:', err.message || err);
+    const msg = err.message && err.message.includes('not configured')
+      ? (lang === 'de' ? 'Foto-Dienst nicht konfiguriert. Bitte Administrator kontaktieren.' : 'Photo service not configured. Please contact the administrator.')
+      : (lang === 'de' ? 'Foto-Upload fehlgeschlagen. Bitte erneut versuchen.' : 'Photo upload failed. Please try again.');
+    req.session.flash = { error: msg };
     return res.redirect('/disposal/log');
   }
 
