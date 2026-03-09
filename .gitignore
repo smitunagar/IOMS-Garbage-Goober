@@ -1,11 +1,38 @@
+# ── Dependencies ──────────────────────────────────────────────────────────────
 node_modules/
-data/*.db
-data/*.db-shm
-data/*.db-wal
+
+# ── Environment & secrets ──────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Local SQLite (legacy – not used in production) ────────────────────────────
+data/
+
+# ── Upload staging directory ──────────────────────────────────────────────────
+uploads/
 public/uploads/
+
+# ── Image source files (only final assets belong in the repo) ─────────────────
 public/images/*.HEIC
 public/images/ChatGPT*
-.DS_Store
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
 *.log
-.env
-uploads/
+logs/
+npm-debug.log*
+
+# ── OS artefacts ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Test output ───────────────────────────────────────────────────────────────
+playwright-report/
+test-results/
+coverage/
