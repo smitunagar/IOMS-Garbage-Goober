@@ -440,6 +440,7 @@
   display: block;
   border-radius: 4px;
   opacity: 0.9;
+  filter: brightness(0) invert(1);
 }
 .main-content {
   min-height: 100vh;
