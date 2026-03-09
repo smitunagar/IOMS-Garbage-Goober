@@ -13,7 +13,7 @@
       <!-- Verpackung / Gelber Sack -->
       <label class="bin-select-card" style="--bc:#F9A825;" onclick="toggleBinChip(this)">
         <input type="checkbox" name="bins" value="verpackung">
-        <div class="bin-select-swatch">♻️</div>
+        <div class="bin-select-swatch"><i class="bi bi-recycle"></i></div>
         <div class="bin-select-info">
           <strong><%= lang === 'de' ? 'Verpackung' : 'Packaging' %></strong>
           <span class="bin-select-sub"><%= lang === 'de' ? 'Gelber Sack · Plastik, Dosen, Tetrapaks' : 'Yellow Bag · Plastic, cans, tetrapaks' %></span>
@@ -24,7 +24,7 @@
       <!-- Papier -->
       <label class="bin-select-card" style="--bc:#1565C0;" onclick="toggleBinChip(this)">
         <input type="checkbox" name="bins" value="papier">
-        <div class="bin-select-swatch">📦</div>
+        <div class="bin-select-swatch"><i class="bi bi-newspaper"></i></div>
         <div class="bin-select-info">
           <strong><%= lang === 'de' ? 'Papier' : 'Paper' %></strong>
           <span class="bin-select-sub"><%= lang === 'de' ? 'Blauer Behälter · Zeitungen, Karton' : 'Blue bin · Newspapers, cardboard' %></span>
@@ -35,7 +35,7 @@
       <!-- Restmüll -->
       <label class="bin-select-card" style="--bc:#616161;" onclick="toggleBinChip(this)">
         <input type="checkbox" name="bins" value="restmuell">
-        <div class="bin-select-swatch">🗑️</div>
+        <div class="bin-select-swatch"><i class="bi bi-trash3-fill"></i></div>
         <div class="bin-select-info">
           <strong><%= lang === 'de' ? 'Restmüll' : 'Residual waste' %></strong>
           <span class="bin-select-sub"><%= lang === 'de' ? 'Grauer Behälter · Nicht recycelbar' : 'Grey bin · Non-recyclable waste' %></span>
@@ -46,7 +46,7 @@
       <!-- BioMüll -->
       <label class="bin-select-card" style="--bc:#2E7D32;" onclick="toggleBinChip(this)">
         <input type="checkbox" name="bins" value="biomuell">
-        <div class="bin-select-swatch">🌿</div>
+        <div class="bin-select-swatch"><i class="bi bi-tree-fill"></i></div>
         <div class="bin-select-info">
           <strong><%= lang === 'de' ? 'BioMüll' : 'Organic waste' %></strong>
           <span class="bin-select-sub"><%= lang === 'de' ? 'Grüner Eimer · Essensreste, Schalen' : 'Green bin · Food scraps, peels' %></span>
