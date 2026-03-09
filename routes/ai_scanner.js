@@ -149,7 +149,7 @@ router.post('/scan-waste', requireAuth, upload.single('image'), async (req, res)
     'Given this image of a waste item, identify it and respond ONLY with valid JSON ' +
     '(no markdown, no extra text) in this exact format:\n' +
     '{"item_name":"<concise name in English>","description":"<one sentence about material/type>",' +
-    '"material_hints":["<material1>","<material2>"],"confidence":<0.0-1.0>}\n' +
+    '"material_hints":["<material1>","<material2>"]}\n' +
     'Focus on the primary waste item. Be specific about materials (e.g. "plastic bottle", not just "bottle").';
 
   let aiResult;
@@ -172,14 +172,9 @@ router.post('/scan-waste', requireAuth, upload.single('image'), async (req, res)
     item_name      = 'Unknown item',
     description    = '',
     material_hints = [],
-    confidence     = 0.6,
   } = aiResult;
 
-  const { primary, mappingConfidence, fallbacks } = mapToBin(item_name, description, material_hints);
-
-  // Final confidence = blend of AI vision confidence + rule-mapping certainty
-  const finalConfidence = Math.round(((confidence + mappingConfidence) / 2) * 100);
-  const isLow           = finalConfidence < 55;
+  const { primary } = mapToBin(item_name, description, material_hints);
 
   res.json({
     ok: true,
@@ -187,11 +182,6 @@ router.post('/scan-waste', requireAuth, upload.single('image'), async (req, res)
     description,
     recommended_bin: primary,
     bin_meta:        BIN_META[primary],
-    confidence:      finalConfidence,
-    low_confidence:  isLow,
-    fallbacks:       isLow
-      ? fallbacks.slice(0, 2).map(b => ({ bin: b, ...BIN_META[b] }))
-      : [],
   });
 });
 

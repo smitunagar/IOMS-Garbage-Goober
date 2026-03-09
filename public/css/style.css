@@ -927,40 +927,4 @@
   margin-bottom: 0;
 }
 
-/* ── Confidence bar ─────────────────────────────────────────────────────── */
-.wsc-confidence-track {
-  height: 8px;
-  background: #e9ecef;
-  border-radius: 4px;
-  overflow: hidden;
-}
-.wsc-confidence-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.5s ease;
-}
 
-/* ── Warning ────────────────────────────────────────────────────────────── */
-.wsc-warning {
-  background: #fff8e1;
-  border-left: 3px solid #F9A825;
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.82rem;
-  color: #7a5900;
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-/* ── Fallback chips ─────────────────────────────────────────────────────── */
-.wsc-fallbacks { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.wsc-fallback-chip {
-  display: inline-block;
-  padding: 0.3rem 0.75rem;
-  border-radius: 20px;
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: default;
-}

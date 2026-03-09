@@ -81,28 +81,6 @@
     document.getElementById('wsc-description').textContent  = data.description;
     document.getElementById('wsc-bin-explanation').textContent = data.bin_meta.explanation;
 
-    // Confidence bar
-    const pct  = data.confidence;
-    const fill = document.getElementById('wsc-confidence-fill');
-    fill.style.width      = pct + '%';
-    fill.style.background = pct >= 70 ? '#2E7D32' : pct >= 50 ? '#F9A825' : '#D32F2F';
-    document.getElementById('wsc-confidence-label').textContent = pct + '%';
-
-    // Low-confidence warning
-    document.getElementById('wsc-warning').style.display = data.low_confidence ? 'flex' : 'none';
-
-    // Fallback chips
-    const fbContainer = document.getElementById('wsc-fallbacks');
-    fbContainer.innerHTML = '';
-    if (data.fallbacks && data.fallbacks.length > 0) {
-      data.fallbacks.forEach(fb => {
-        const chip = document.createElement('span');
-        chip.className         = 'wsc-fallback-chip';
-        chip.style.background  = fb.color;
-        chip.textContent       = fb.emoji + ' ' + fb.label;
-        fbContainer.appendChild(chip);
-      });
-    }
   }
 
   // ── Error ────────────────────────────────────────────────────────────────
