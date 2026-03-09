@@ -1,0 +1,170 @@
+name: CI Test Suite
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs for the same branch on new pushes
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+
+# ─────────────────────────────────────────────────────────────────────────────
+jobs:
+
+  # ── 1. Unit tests (pure JS – no DB required) ─────────────────────────────
+  unit:
+    name: Unit Tests (Jest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm run test:unit
+
+  # ── 2. Integration tests (supertest + real Neon DB) ──────────────────────
+  integration:
+    name: Integration Tests (Supertest)
+    runs-on: ubuntu-latest
+    # Only run if DB secrets are available (skip on fork PRs)
+    if: ${{ secrets.DATABASE_URL != '' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          DATABASE_URL:    ${{ secrets.DATABASE_URL }}
+          SESSION_SECRET:  ${{ secrets.SESSION_SECRET }}
+          GEMINI_API_KEY:  ${{ secrets.GEMINI_API_KEY }}
+          NODE_ENV:        test
+
+  # ── 3. E2E Playwright tests (against running server + Neon DB) ───────────
+  e2e:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: [unit]
+    if: ${{ secrets.DATABASE_URL != '' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Seed test accounts in database
+        run: npm run test:seed
+        env:
+          DATABASE_URL:   ${{ secrets.DATABASE_URL }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+
+      - name: Run Playwright E2E tests
+        run: npm run test:e2e
+        env:
+          DATABASE_URL:   ${{ secrets.DATABASE_URL }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NODE_ENV:       test
+          # BASE_URL is intentionally left unset so playwright.config.js
+          # starts the server locally via `webServer` config.
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ── 4. Load tests (k6) – only on main branch ─────────────────────────────
+  load:
+    name: Load Tests (k6 smoke)
+    runs-on: ubuntu-latest
+    needs: [e2e]
+    if: github.ref == 'refs/heads/main' && secrets.DATABASE_URL != ''
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install k6
+        run: |
+          sudo gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] \
+            https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update -q
+          sudo apt-get install -y k6
+
+      - name: Seed test accounts
+        run: npm run test:seed
+        env:
+          DATABASE_URL:   ${{ secrets.DATABASE_URL }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+
+      - name: Start app server in background
+        run: |
+          node server.js &
+          echo "SERVER_PID=$!" >> $GITHUB_ENV
+          # Wait for server to be ready
+          for i in $(seq 1 15); do
+            curl -sf http://localhost:3000/login && break || sleep 2
+          done
+        env:
+          DATABASE_URL:   ${{ secrets.DATABASE_URL }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PORT:           '3000'
+          NODE_ENV:       test
+
+      - name: Run k6 smoke test
+        run: k6 run --env BASE_URL=http://localhost:3000 tests/load/smoke.js
+
+      - name: Stop app server
+        if: always()
+        run: kill $SERVER_PID 2>/dev/null || true
