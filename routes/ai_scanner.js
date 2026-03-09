@@ -1,7 +1,7 @@
 'use strict';
 const express = require('express');
 const multer  = require('multer');
-const { OpenAI } = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -134,44 +134,31 @@ router.post('/scan-waste', requireAuth, upload.single('image'), async (req, res)
     return res.status(400).json({ ok: false, error: 'No image provided.' });
   }
 
-  if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your-openai-api-key-here') {
-    return res.status(503).json({ ok: false, error: 'AI scanner not configured. Please add your OPENAI_API_KEY in the environment settings.' });
+  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'your-gemini-api-key-here') {
+    return res.status(503).json({ ok: false, error: 'AI scanner not configured. Please add your GEMINI_API_KEY in the environment settings.' });
   }
 
-  const openai  = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const base64  = req.file.buffer.toString('base64');
-  const mime    = req.file.mimetype || 'image/jpeg';
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+  const base64 = req.file.buffer.toString('base64');
+  const mime   = req.file.mimetype || 'image/jpeg';
+
+  const prompt =
+    'You are a waste item identification assistant. ' +
+    'Given this image of a waste item, identify it and respond ONLY with valid JSON ' +
+    '(no markdown, no extra text) in this exact format:\n' +
+    '{"item_name":"<concise name in English>","description":"<one sentence about material/type>",' +
+    '"material_hints":["<material1>","<material2>"],"confidence":<0.0-1.0>}\n' +
+    'Focus on the primary waste item. Be specific about materials (e.g. "plastic bottle", not just "bottle").';
 
   let aiResult;
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      max_tokens: 300,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a waste item identification assistant. ' +
-            'Given an image of a waste item, identify it and respond ONLY with valid JSON ' +
-            '(no markdown, no extra text) in this exact format:\n' +
-            '{"item_name":"<concise name in English>","description":"<one sentence about material/type>",' +
-            '"material_hints":["<material1>","<material2>"],"confidence":<0.0-1.0>}\n' +
-            'Focus on the primary waste item. Be specific about materials (e.g. "plastic bottle", not just "bottle").',
-        },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'image_url',
-              image_url: { url: `data:${mime};base64,${base64}`, detail: 'low' },
-            },
-            { type: 'text', text: 'Identify this waste item. JSON only.' },
-          ],
-        },
-      ],
-    });
-
-    const raw     = response.choices[0].message.content.trim();
+    const result = await model.generateContent([
+      prompt,
+      { inlineData: { mimeType: mime, data: base64 } },
+    ]);
+    const raw     = result.response.text().trim();
     const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/i, '').trim();
     aiResult = JSON.parse(jsonStr);
   } catch (err) {
