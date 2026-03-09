@@ -826,9 +826,11 @@
   border-radius: 24px 24px 0 0;
   padding: 1.5rem 1.5rem 2rem;
   position: relative;
+  max-height: 92vh;
+  overflow-y: auto;
 }
 @media (min-width: 576px) {
-  .waste-scan-modal-inner { border-radius: 24px; padding: 1.75rem 2rem; }
+  .waste-scan-modal-inner { border-radius: 24px; padding: 1.75rem 2rem; max-height: 88vh; }
 }
 
 .waste-scan-modal-header {
@@ -898,7 +900,7 @@
   100% { top: 100%; opacity: 0.8; }
 }
 
-/* ── Bin badge ──────────────────────────────────────────────────────────── */
+/* ── Bin badge (legacy — kept for fallback) ─────────────────────────────── */
 .wsc-bin-badge {
   display: inline-block;
   padding: 0.45rem 1.1rem;
@@ -910,23 +912,128 @@
   margin-bottom: 0.25rem;
 }
 
-/* ── Item name ──────────────────────────────────────────────────────────── */
-.wsc-item-name {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  text-transform: capitalize;
+/* ── Bin hero card ──────────────────────────────────────────────────────── */
+.wsc-bin-hero {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.95rem 1.1rem;
+  border-radius: 14px;
+  margin-bottom: 0.9rem;
+}
+.wsc-bin-hero-icon {
+  font-size: 2.2rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.wsc-bin-hero-text { display: flex; flex-direction: column; gap: 2px; }
+.wsc-bin-hero-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+.wsc-bin-hero-sub {
+  font-size: 0.78rem;
+  font-weight: 500;
 }
 
-/* ── Bin explanation ────────────────────────────────────────────────────── */
-.wsc-bin-explanation {
-  font-size: 0.82rem;
-  color: #555;
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 0.6rem 0.85rem;
-  margin-bottom: 0;
+/* ── Detected item ──────────────────────────────────────────────────────── */
+.wsc-detected-item {
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid #eee;
 }
+.wsc-detected-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #9e9e9e;
+  margin-bottom: 2px;
+}
+.wsc-detected-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.wsc-detected-desc {
+  font-size: 0.80rem;
+  color: #666;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+/* ── Steps ──────────────────────────────────────────────────────────────── */
+.wsc-steps-wrap { margin-bottom: 0.85rem; }
+.wsc-steps-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #555;
+  margin-bottom: 0.55rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.wsc-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  margin-bottom: 0.55rem;
+}
+.wsc-step-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.wsc-step-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.81rem;
+  color: #333;
+  line-height: 1.45;
+}
+.wsc-step-body i {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── Tip ────────────────────────────────────────────────────────────────── */
+.wsc-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: #333;
+  line-height: 1.4;
+  margin-bottom: 0.25rem;
+}
+.wsc-tip i { flex-shrink: 0; margin-top: 2px; }
+
+/* ── Scan again button ──────────────────────────────────────────────────── */
+.wsc-scan-again-btn {
+  background: #f3f4f6;
+  color: #444;
+  border: 1px solid #ddd;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 0.5rem;
+}
+.wsc-scan-again-btn:hover { background: #e8e9ec; color: #222; }
 
 
 
