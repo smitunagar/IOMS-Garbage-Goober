@@ -750,3 +750,217 @@
 .btn-outline-primary { color: var(--primary); border-color: var(--primary); }
 .btn-outline-primary:hover { background-color: var(--primary); border-color: var(--primary); color: #fff; }
 .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 0.2rem rgba(46,125,50,0.25); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   AI Waste Scanner – FAB, overlay, modal
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Floating Action Button ─────────────────────────────────────────────── */
+.waste-scan-fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1050;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2E7D32, #43A047);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 18px rgba(46,125,50,0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.waste-scan-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(46,125,50,0.55);
+}
+.waste-scan-fab:active { transform: scale(0.96); }
+.waste-scan-fab i { font-size: 1.35rem; line-height: 1; }
+.waste-scan-fab-label { font-size: 0.52rem; letter-spacing: 0.5px; font-weight: 700; text-transform: uppercase; line-height: 1; }
+
+/* ── Overlay ────────────────────────────────────────────────────────────── */
+.waste-scan-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 1055;
+  backdrop-filter: blur(2px);
+}
+.waste-scan-overlay.active { display: block; }
+
+/* ── Modal ──────────────────────────────────────────────────────────────── */
+.waste-scan-modal {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1060;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+@media (min-width: 576px) {
+  .waste-scan-modal {
+    top: 50%;
+    bottom: auto;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%);
+    width: 420px;
+    border-radius: 24px;
+    max-height: 85vh;
+  }
+}
+.waste-scan-modal.active { display: block; }
+
+.waste-scan-modal-inner {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 1.5rem 1.5rem 2rem;
+  position: relative;
+}
+@media (min-width: 576px) {
+  .waste-scan-modal-inner { border-radius: 24px; padding: 1.75rem 2rem; }
+}
+
+.waste-scan-modal-header {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1B4D1F;
+  margin-bottom: 1.25rem;
+  padding-right: 2rem;
+}
+
+.waste-scan-close {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.1rem;
+  background: #f1f3f4;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #444;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+}
+.waste-scan-close:hover { background: #dde0e3; }
+
+/* ── Preview ────────────────────────────────────────────────────────────── */
+.wsc-preview-section { margin-bottom: 1.25rem; }
+.wsc-preview-wrap {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f8f9fa;
+  max-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wsc-preview-img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Scan animation ─────────────────────────────────────────────────────── */
+.wsc-scan-anim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.wsc-scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #4CAF50, transparent);
+  box-shadow: 0 0 10px #4CAF50;
+  animation: wsc-scan 1.6s ease-in-out infinite;
+}
+@keyframes wsc-scan {
+  0%   { top: 0%; opacity: 0.8; }
+  50%  { opacity: 1; }
+  100% { top: 100%; opacity: 0.8; }
+}
+
+/* ── Bin badge ──────────────────────────────────────────────────────────── */
+.wsc-bin-badge {
+  display: inline-block;
+  padding: 0.45rem 1.1rem;
+  border-radius: 30px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+/* ── Item name ──────────────────────────────────────────────────────────── */
+.wsc-item-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  text-transform: capitalize;
+}
+
+/* ── Bin explanation ────────────────────────────────────────────────────── */
+.wsc-bin-explanation {
+  font-size: 0.82rem;
+  color: #555;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  margin-bottom: 0;
+}
+
+/* ── Confidence bar ─────────────────────────────────────────────────────── */
+.wsc-confidence-track {
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.wsc-confidence-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* ── Warning ────────────────────────────────────────────────────────────── */
+.wsc-warning {
+  background: #fff8e1;
+  border-left: 3px solid #F9A825;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
+  color: #7a5900;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* ── Fallback chips ─────────────────────────────────────────────────────── */
+.wsc-fallbacks { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.wsc-fallback-chip {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: default;
+}

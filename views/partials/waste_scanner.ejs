@@ -1,0 +1,108 @@
+<% if (locals.user && user.is_onboarded) { %>
+
+<!-- ════════════════════════════════════════════════════════
+     AI Waste Scanner – FAB + hidden file input + modal
+     ════════════════════════════════════════════════════════ -->
+
+<!-- Hidden camera/file input -->
+<input type="file" id="waste-scan-input" accept="image/*" capture="environment" style="display:none" aria-hidden="true">
+
+<!-- Floating Action Button -->
+<button id="waste-scan-fab" class="waste-scan-fab" title="AI Waste Scanner" aria-label="Scan a waste item with AI">
+  <i class="bi bi-camera-fill"></i>
+  <span class="waste-scan-fab-label">Scan</span>
+</button>
+
+<!-- Overlay -->
+<div id="waste-scan-overlay" class="waste-scan-overlay"></div>
+
+<!-- Modal -->
+<div id="waste-scan-modal" class="waste-scan-modal" role="dialog" aria-modal="true" aria-label="AI Waste Scanner">
+  <div class="waste-scan-modal-inner">
+
+    <!-- Close button -->
+    <button id="waste-scan-close" class="waste-scan-close" aria-label="Close scanner">
+      <i class="bi bi-x-lg"></i>
+    </button>
+
+    <!-- Header -->
+    <div class="waste-scan-modal-header">
+      <i class="bi bi-stars me-2" style="color:#2E7D32"></i>AI Waste Scanner
+    </div>
+
+    <!-- ── Shared preview (shown once image is loaded) ──────────────────── -->
+    <div id="wsc-preview-section" class="wsc-preview-section" style="display:none">
+      <div class="wsc-preview-wrap">
+        <img id="wsc-preview-img" src="" alt="Captured waste item" class="wsc-preview-img">
+        <div id="wsc-scan-anim" class="wsc-scan-anim" style="display:none">
+          <div class="wsc-scan-line"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Scanning state ───────────────────────────────────────────────── -->
+    <div id="wsc-view-scanning" style="display:none">
+      <div class="text-center py-2">
+        <div class="spinner-border mb-2" role="status" style="color:#2E7D32;width:2rem;height:2rem">
+          <span class="visually-hidden">Analysing…</span>
+        </div>
+        <p class="text-muted small mb-0 fw-semibold">Identifying waste item…</p>
+        <p class="text-muted" style="font-size:0.75rem">This may take a few seconds</p>
+      </div>
+    </div>
+
+    <!-- ── Result state ─────────────────────────────────────────────────── -->
+    <div id="wsc-view-result" style="display:none">
+      <!-- Bin badge -->
+      <div class="mb-1">
+        <div id="wsc-bin-badge" class="wsc-bin-badge">🗑️ RESTMUELL</div>
+      </div>
+
+      <!-- Item name + description -->
+      <h5 id="wsc-item-name" class="wsc-item-name mt-2 mb-1">—</h5>
+      <p id="wsc-description" class="text-muted small mb-2">—</p>
+
+      <!-- Bin explanation -->
+      <div id="wsc-bin-explanation" class="wsc-bin-explanation mb-3">—</div>
+
+      <!-- Confidence bar -->
+      <div class="wsc-confidence mb-3">
+        <div class="d-flex justify-content-between mb-1">
+          <span class="small text-muted">Confidence</span>
+          <span id="wsc-confidence-label" class="small fw-bold">—</span>
+        </div>
+        <div class="wsc-confidence-track">
+          <div id="wsc-confidence-fill" class="wsc-confidence-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Low-confidence warning -->
+      <div id="wsc-warning" class="wsc-warning mb-2" style="display:none">
+        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+        <span>Low confidence – also consider:</span>
+      </div>
+
+      <!-- Fallback chips -->
+      <div id="wsc-fallbacks" class="wsc-fallbacks mb-3"></div>
+
+      <!-- Scan again -->
+      <button class="btn btn-outline-secondary btn-sm w-100 mt-1" id="wsc-scan-again">
+        <i class="bi bi-camera me-1"></i>Scan another item
+      </button>
+    </div>
+
+    <!-- ── Error state ───────────────────────────────────────────────────── -->
+    <div id="wsc-view-error" style="display:none">
+      <div class="text-center py-3">
+        <i class="bi bi-exclamation-circle" style="font-size:2.5rem;color:#D32F2F"></i>
+        <p id="wsc-error-msg" class="mt-3 text-muted small mb-3">An error occurred.</p>
+        <button class="btn btn-sm btn-outline-primary" id="wsc-retry-btn">
+          <i class="bi bi-arrow-clockwise me-1"></i>Try again
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /.waste-scan-modal-inner -->
+</div><!-- /.waste-scan-modal -->
+
+<% } %>
