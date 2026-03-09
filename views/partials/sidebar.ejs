@@ -79,6 +79,14 @@
       <span class="sidebar-link-label"><%= t('navFloorSpeaker') %></span>
     </a>
     <% } %>
+    <div class="sidebar-section-label">Account</div>
+    <a class="sidebar-link <%= path.startsWith('/profile') ? 'active' : '' %>" href="/profile">
+      <span class="sidebar-link-icon"><i class="bi bi-gear-fill"></i></span>
+      <span class="sidebar-link-label">Settings</span>
+      <% if (user && user.phone && user.whatsapp_key) { %>
+        <span class="ms-auto"><i class="bi bi-whatsapp" style="color:#25D366;font-size:0.8rem;"></i></span>
+      <% } %>
+    </a>
   </nav>
 
   <!-- ── Footer ─────────────────────────────────────────────────────────── -->
