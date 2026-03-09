@@ -1,39 +1,11 @@
+'use strict';
 const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const cloudinary = require('cloudinary').v2;
 const db = require('../config/database').getDb;
 const { requireAuth, requireOnboarded } = require('../middleware/auth');
 const { BIN_TYPES } = require('../utils/constants');
 const { fmtDateTime } = require('../utils/rotation');
 
 const router = express.Router();
-
-// Multer: memory storage (file held in buffer, uploaded to Cloudinary)
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 4 * 1024 * 1024 }, // 4 MB (Vercel 4.5 MB body limit)
-});
-
-// Upload buffer to Cloudinary and return secure URL
-function uploadToCloudinary(buffer, mimetype) {
-  // Configure lazily so Vercel env vars are always fresh
-  cloudinary.config({
-    cloud_name:  process.env.CLOUDINARY_CLOUD_NAME,
-    api_key:     process.env.CLOUDINARY_API_KEY,
-    api_secret:  process.env.CLOUDINARY_API_SECRET,
-  });
-  if (!process.env.CLOUDINARY_CLOUD_NAME) {
-    return Promise.reject(new Error('Cloudinary not configured – add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET to Vercel env vars'));
-  }
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: 'ioms-disposals', resource_type: 'image' },
-      (error, result) => { if (error) reject(error); else resolve(result); }
-    );
-    stream.end(buffer);
-  });
-}
 
 /* ── GET /disposal/log ───────────────────────────────────────────────────── */
 router.get('/log', requireAuth, requireOnboarded, (req, res) => {
@@ -95,57 +67,37 @@ router.get('/feed', requireAuth, requireOnboarded, async (req, res) => {
   });
 });
 
-/* ── POST /disposal/log ──────────────────────────────────────────────────── */
-router.post('/log', requireAuth, requireOnboarded, upload.array('photos', 4), async (req, res) => {
+/* ── POST /disposal/log (JSON body, photos as base64 data URIs) ──────────── */
+router.post('/log', requireAuth, requireOnboarded, async (req, res) => {
   const user = res.locals.user;
   const lang = res.locals.lang || 'en';
   const t    = res.locals.t;
-  const { bins, note } = req.body;
+  const { bins, note, photos } = req.body;
 
   // Validate bins
   const selectedBins = Array.isArray(bins) ? bins : (bins ? [bins] : []);
   if (selectedBins.length === 0) {
-    req.session.flash = { error: t('selectAtLeastOneBin') };
-    return res.redirect('/disposal/log');
+    return res.json({ ok: false, error: lang === 'de' ? 'Bitte mindestens einen Behälter auswählen.' : 'Please select at least one bin.' });
   }
 
-  // Require one photo per bin
-  const files = req.files || [];
-  if (files.length === 0) {
-    req.session.flash = { error: lang === 'de' ? 'Bitte für jeden Behälter ein Foto hochladen.' : 'Please upload a photo for each bin.' };
-    return res.redirect('/disposal/log');
+  // Validate photos
+  const photoList = Array.isArray(photos) ? photos.filter(Boolean) : (photos ? [photos] : []);
+  if (photoList.length === 0) {
+    return res.json({ ok: false, error: lang === 'de' ? 'Bitte für jeden Behälter ein Foto hochladen.' : 'Please upload a photo for each bin.' });
   }
-  if (files.length < selectedBins.length) {
-    req.session.flash = { error: lang === 'de'
-      ? `Bitte für alle ${selectedBins.length} Behälter ein Foto hinzufügen (${files.length} hochgeladen).`
-      : `Please add a photo for all ${selectedBins.length} bins (${files.length} uploaded).` };
-    return res.redirect('/disposal/log');
-  }
-
-  // Upload all photos to Cloudinary in parallel
-  let photoPaths = [];
-  try {
-    const results = await Promise.all(
-      files.map(f => uploadToCloudinary(f.buffer, f.mimetype))
-    );
-    photoPaths = results.map(r => r.secure_url);
-  } catch (err) {
-    console.error('Cloudinary upload error:', err.message || err);
-    const msg = err.message && err.message.includes('not configured')
-      ? (lang === 'de' ? 'Foto-Dienst nicht konfiguriert. Bitte Administrator kontaktieren.' : 'Photo service not configured. Please contact the administrator.')
-      : (lang === 'de' ? 'Foto-Upload fehlgeschlagen. Bitte erneut versuchen.' : 'Photo upload failed. Please try again.');
-    req.session.flash = { error: msg };
-    return res.redirect('/disposal/log');
+  if (photoList.length < selectedBins.length) {
+    return res.json({ ok: false, error: lang === 'de'
+      ? `Bitte für alle ${selectedBins.length} Behälter ein Foto hinzufügen.`
+      : `Please add a photo for all ${selectedBins.length} bins.` });
   }
 
   await db().run(
     `INSERT INTO disposal_events (user_id, room_id, floor_id, bin_types, note, photo_path, qr_verified)
      VALUES ($1, $2, $3, $4, $5, $6, 1)`,
-    [user.id, user.room_id, user.floor_id, JSON.stringify(selectedBins), note || null, JSON.stringify(photoPaths)]
+    [user.id, user.room_id, user.floor_id, JSON.stringify(selectedBins), note || null, JSON.stringify(photoList)]
   );
 
-  req.session.flash = { success: t('disposalLoggedSuccess') };
-  res.redirect('/home');
+  return res.json({ ok: true });
 });
 
 module.exports = router;

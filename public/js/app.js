@@ -21,6 +21,8 @@ function toggleBinChip(el) {
   }  updatePhotoSlots();}
 
 /* ── Dynamic photo slots (one per selected bin) ────────────────────────── */
+const _slotData = {}; // { binKey: 'data:image/jpeg;base64,...' }
+
 function updatePhotoSlots() {
   const wrapper   = document.getElementById('photo-slots-wrapper');
   const container = document.getElementById('photo-slots');
@@ -37,19 +39,19 @@ function updatePhotoSlots() {
 
   wrapper.style.display = 'block';
 
-  // Keep track of which bins already have a slot
   const existing = {};
   container.querySelectorAll('.photo-slot').forEach(s => { existing[s.dataset.bin] = s; });
 
-  // Remove slots for bins no longer checked
+  // Remove slots for unchecked bins
   Object.keys(existing).forEach(bin => {
     if (!checkedBins.find(cb => cb.value === bin)) {
       existing[bin].remove();
       delete existing[bin];
+      delete _slotData[bin];
     }
   });
 
-  // Add slots for newly checked bins (in order)
+  // Add slots for newly checked bins
   checkedBins.forEach(cb => {
     const bin   = cb.value;
     const card  = cb.closest('label');
@@ -65,51 +67,111 @@ function updatePhotoSlots() {
           <strong>${name}</strong>
           <span class="badge bg-danger ms-1" style="font-size:0.65rem">Required</span>
         </div>
-        <input type="file" name="photos" class="form-control" accept="image/*" capture="environment"
+        <input type="file" accept="image/*" capture="environment"
                onchange="_previewSlot(this,'${bin}')">
         <div id="slot-preview-${bin}" style="display:none" class="mt-2">
-          <img src="" alt="" class="slot-preview img-thumbnail" style="max-height:150px;border-radius:8px">
+          <img src="" alt="" style="max-height:150px;border-radius:8px;border:1px solid #dee2e6">
         </div>`;
       container.appendChild(slot);
     }
   });
 
-  // Re-order DOM to match checkbox order
   checkedBins.forEach(cb => container.appendChild(container.querySelector(`[data-bin="${cb.value}"]`)));
-
   _updateSubmitState();
 }
 
 function _previewSlot(input, bin) {
-  const div = document.getElementById('slot-preview-' + bin);
-  if (!div) return;
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-    reader.onload = e => { div.querySelector('img').src = e.target.result; div.style.display = 'block'; };
-    reader.readAsDataURL(input.files[0]);
-  } else {
-    div.style.display = 'none';
+  if (!input.files || !input.files[0]) {
+    delete _slotData[bin];
+    const div = document.getElementById('slot-preview-' + bin);
+    if (div) div.style.display = 'none';
+    _updateSubmitState();
+    return;
   }
-  _updateSubmitState();
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1024;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else       { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUri = canvas.toDataURL('image/jpeg', 0.75);
+      _slotData[bin] = dataUri;
+      const div = document.getElementById('slot-preview-' + bin);
+      if (div) { div.querySelector('img').src = dataUri; div.style.display = 'block'; }
+      _updateSubmitState();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(input.files[0]);
 }
 
 function _updateSubmitState() {
-  const btn = document.getElementById('disposal-submit-btn');
+  const btn    = document.getElementById('disposal-submit-btn');
   if (!btn) return;
-  const needed  = document.querySelectorAll('input[name="bins"]:checked').length;
-  const filled  = Array.from(document.querySelectorAll('.photo-slot input[type="file"]'))
-                       .filter(i => i.files && i.files.length > 0).length;
-  btn.disabled = needed === 0 || filled < needed;
-  btn.querySelector('i').className = needed > 0 && filled < needed
-    ? 'bi bi-camera me-1'
-    : 'bi bi-check-circle me-1';
-  if (needed > 0 && filled < needed) {
-    btn.textContent = '';
-    const ic = document.createElement('i'); ic.className = 'bi bi-camera me-1';
-    btn.appendChild(ic);
-    btn.append(` Add photos (${filled}/${needed})`);
-  }
+  const needed = document.querySelectorAll('input[name="bins"]:checked').length;
+  const filled = Object.keys(_slotData).length;
+  const ready  = needed > 0 && filled >= needed;
+  btn.disabled = !ready;
+  btn.innerHTML = (needed > 0 && filled < needed)
+    ? `<i class="bi bi-camera me-1"></i>Add photos (${filled}/${needed})`
+    : `<i class="bi bi-check-circle me-1"></i>Send`;
 }
+
+/* ── Disposal form – JSON submit with compressed photos ─────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('disposal-form');
+  if (!form) return;
+
+  const btn = document.getElementById('disposal-submit-btn');
+  if (btn) btn.disabled = true;
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const bins   = Array.from(form.querySelectorAll('input[name="bins"]:checked')).map(i => i.value);
+    const note   = (form.querySelector('textarea[name="note"]') || {}).value || '';
+    const photos = bins.map(b => _slotData[b]).filter(Boolean);
+    const errEl  = document.getElementById('disposal-error');
+
+    if (errEl) errEl.classList.add('d-none');
+
+    if (!bins.length) {
+      if (errEl) { errEl.textContent = 'Please select at least one bin.'; errEl.classList.remove('d-none'); }
+      return;
+    }
+    if (photos.length < bins.length) {
+      if (errEl) { errEl.textContent = `Please add a photo for all ${bins.length} bins.`; errEl.classList.remove('d-none'); }
+      return;
+    }
+
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Saving…'; }
+
+    try {
+      const res  = await fetch('/disposal/log', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ bins, note, photos }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        window.location.href = '/home';
+      } else {
+        if (errEl) { errEl.textContent = data.error || 'Something went wrong.'; errEl.classList.remove('d-none'); }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Send'; }
+      }
+    } catch (_) {
+      if (errEl) { errEl.textContent = 'Network error. Please try again.'; errEl.classList.remove('d-none'); }
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Send'; }
+    }
+  });
+});
+
 
 
 /* ── Room selection (onboarding) ─────────────────────────────────────────── */

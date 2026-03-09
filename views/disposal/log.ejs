@@ -2,7 +2,9 @@
   <h4 class="fw-bold"><%= t('logDisposalTitle') %></h4>
 </div>
 
-<form method="POST" action="/disposal/log" enctype="multipart/form-data">
+<div id="disposal-error" class="alert alert-danger d-none mb-3" role="alert"></div>
+
+<form id="disposal-form" method="POST" action="/disposal/log">
   <!-- ── Bin selection ───────────────────────────────────────────────── -->
   <div class="stat-card mb-3">
     <h6 class="fw-semibold mb-3"><%= t('whichBinsEmptied') %></h6>

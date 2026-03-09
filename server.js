@@ -19,8 +19,8 @@ app.set('layout', 'layout');
 app.use(expressLayouts);
 
 // ── Body parsing ─────────────────────────────────────────────────────────────
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: '6mb' }));
+app.use(express.json({ limit: '6mb' }));
 
 // ── Static files ─────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
