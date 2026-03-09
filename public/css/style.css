@@ -265,6 +265,7 @@
 .sidebar-brand-logo {
   width: 130px;
   height: auto;
+  mix-blend-mode: multiply;
   opacity: 0.95;
 }
 
