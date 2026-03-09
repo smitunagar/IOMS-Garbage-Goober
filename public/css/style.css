@@ -265,8 +265,8 @@
 .sidebar-brand-logo {
   width: 130px;
   height: auto;
-  mix-blend-mode: multiply;
-  opacity: 0.95;
+  filter: brightness(0) invert(1);
+  opacity: 0.92;
 }
 
 /* User pill */
