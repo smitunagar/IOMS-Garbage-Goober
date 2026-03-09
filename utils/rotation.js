@@ -18,23 +18,23 @@ const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
 function getWeekStart(date) {
   if (!date) date = new Date();
   const d = new Date(date);
-  const day = d.getDay();
+  const day = d.getUTCDay();
   const diff = day === 0 ? -6 : 1 - day;
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
+  d.setUTCDate(d.getUTCDate() + diff);
+  d.setUTCHours(0, 0, 0, 0);
   return d;
 }
 
 function getWeekEnd(date) {
   const ws = getWeekStart(date || new Date());
-  ws.setDate(ws.getDate() + 6);
-  ws.setHours(23, 59, 59, 999);
+  ws.setUTCDate(ws.getUTCDate() + 6);
+  ws.setUTCHours(23, 59, 59, 999);
   return ws;
 }
 
 function getNextWeekStart(date) {
   const ws = getWeekStart(date || new Date());
-  ws.setDate(ws.getDate() + 7);
+  ws.setUTCDate(ws.getUTCDate() + 7);
   return ws;
 }
 

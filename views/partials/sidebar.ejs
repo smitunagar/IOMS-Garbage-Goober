@@ -101,36 +101,3 @@
   </div>
 
 </div>
-
-<!-- ── Delete Account Modal ──────────────────────────────────────────────── -->
-<% if (user && !user.is_admin) { %>
-<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header border-0 pb-0">
-        <h5 class="modal-title text-danger fw-bold" id="deleteAccountModalLabel">
-          <i class="bi bi-exclamation-triangle-fill me-2"></i><%= t('deleteAccountTitle') %>
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p class="text-muted small mb-3"><%= t('deleteAccountWarning') %></p>
-        <form method="POST" action="/account/delete" id="deleteAccountForm">
-          <label class="form-label fw-semibold"><%= t('deleteAccountPasswordLabel') %></label>
-          <input type="password" name="password" class="form-control mb-1"
-                 placeholder="<%= t('passwordRequired') %>" required autocomplete="current-password">
-          <div class="form-text text-danger"><%= t('deleteAccountIrreversible') %></div>
-        </form>
-      </div>
-      <div class="modal-footer border-0 pt-0">
-        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
-          <%= t('cancelButton') %>
-        </button>
-        <button type="submit" form="deleteAccountForm" class="btn btn-danger btn-sm">
-          <i class="bi bi-trash3-fill me-1"></i><%= t('deleteAccountConfirmButton') %>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<% } %>
