@@ -57,6 +57,36 @@
         <button type="submit" class="btn btn-login w-100">
           <%= t('createAccountButton') %> <i class="bi bi-arrow-right ms-2"></i>
         </button>
+
+        <!-- Floor Speaker toggle -->
+        <div class="mt-3 pt-3 border-top">
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" name="is_floor_speaker"
+                   id="isFloorSpeaker" value="on" onchange="toggleFsFields(this.checked)">
+            <label class="form-check-label small fw-semibold text-muted" for="isFloorSpeaker">
+              <i class="bi bi-person-badge me-1"></i><%= t('registerAsFloorSpeaker') %>
+            </label>
+          </div>
+          <div id="fsFields" style="display:none;" class="mt-2">
+            <div class="input-float mb-3">
+              <input type="text" name="fs_code" id="fsCode" class="form-control"
+                     placeholder=" " autocomplete="off">
+              <label for="fsCode"><i class="bi bi-key me-1"></i><%= t('floorSpeakerCodeLabel') %></label>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-semibold text-muted"><%= t('floorSpeakerFloorLabel') %></label>
+              <select name="fs_floor" id="fsFloor" class="form-select">
+                <option value="">— <%= t('floorLabel') %> —</option>
+                <% for (let f = 1; f <= 7; f++) { %>
+                  <option value="<%= f %>"><%= t('floorChipLabel', { floor: f }) %></option>
+                <% } %>
+              </select>
+            </div>
+            <p class="text-muted small mb-0">
+              <i class="bi bi-info-circle me-1"></i><%= t('floorSpeakerSignupNote') %>
+            </p>
+          </div>
+        </div>
       </form>
 
       <div class="lp-divider"><span>or</span></div>
@@ -67,6 +97,16 @@
       </p>
 
     </div><!-- /.lp-card -->
+
+    <script>
+      function toggleFsFields(show) {
+        document.getElementById('fsFields').style.display = show ? 'block' : 'none';
+        const codeInput = document.getElementById('fsCode');
+        const floorSel  = document.getElementById('fsFloor');
+        codeInput.required = show;
+        floorSel.required  = show;
+      }
+    </script>
 
     <!-- WebMeister360 credit -->
     <div class="lp-wm-credit">

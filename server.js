@@ -80,6 +80,7 @@ app.use('/disposal', require('./routes/disposal'));
 app.use('/alerts', require('./routes/alerts'));
 app.use('/history', require('./routes/history'));
 app.use('/admin', require('./routes/admin'));
+app.use('/floor-speaker', require('./routes/floor_speaker'));
 
 // Root redirect
 app.get('/', (req, res) => {

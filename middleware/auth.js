@@ -45,4 +45,25 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-module.exports = { loadUser, requireAuth, requireOnboarded, requireAdmin };
+/** 403 if not a floor speaker (or admin). */
+function requireFloorSpeaker(req, res, next) {
+  const user = res.locals.user;
+  if (!user || (user.role !== 'floor_speaker' && !user.is_admin)) {
+    return res.status(403).render('error', { pageTitle: '403', message: 'Forbidden' });
+  }
+  next();
+}
+
+/**
+ * 403 if not admin AND not the floor speaker for req.params.floorId.
+ * Must come after requireAuth + requireOnboarded.
+ */
+function requireFloorAccess(req, res, next) {
+  const user = res.locals.user;
+  const floorId = parseInt(req.params.floorId);
+  if (user.is_admin) return next();
+  if (user.role === 'floor_speaker' && parseInt(user.managed_floor_id) === floorId) return next();
+  return res.status(403).render('error', { pageTitle: '403', message: 'Forbidden – not your floor' });
+}
+
+module.exports = { loadUser, requireAuth, requireOnboarded, requireAdmin, requireFloorSpeaker, requireFloorAccess };

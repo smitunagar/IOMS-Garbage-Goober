@@ -17,9 +17,13 @@
     <div class="sidebar-user-info">
       <div class="sidebar-user-name"><%= user.name %></div>
       <div class="sidebar-user-room">
-        <i class="bi bi-door-open me-1"></i><%= C.roomLabel(user.room_id) %>
-        &nbsp;·&nbsp;
-        <i class="bi bi-building me-1"></i><%= t('floorChipLabel', { floor: user.floor_id }) %>
+        <% if (user.role === 'floor_speaker') { %>
+          <i class="bi bi-person-badge me-1"></i><%= t('floorSpeakerLabel', { floor: user.managed_floor_id }) %>
+        <% } else { %>
+          <i class="bi bi-door-open me-1"></i><%= C.roomLabel(user.room_id) %>
+          &nbsp;·&nbsp;
+          <i class="bi bi-building me-1"></i><%= t('floorChipLabel', { floor: user.floor_id }) %>
+        <% } %>
       </div>
     </div>
   </div>
@@ -49,6 +53,14 @@
     <a class="sidebar-link <%= path.startsWith('/admin') ? 'active' : '' %>" href="/admin">
       <span class="sidebar-link-icon"><i class="bi bi-shield-fill-check"></i></span>
       <span class="sidebar-link-label"><%= t('navAdmin') %></span>
+    </a>
+    <% } %>
+
+    <% if (user && user.role === 'floor_speaker') { %>
+    <div class="sidebar-section-label"><%= t('navFloorSpeakerSection') %></div>
+    <a class="sidebar-link <%= path.startsWith('/floor-speaker') ? 'active' : '' %>" href="/floor-speaker/rotation/<%= user.managed_floor_id %>">
+      <span class="sidebar-link-icon"><i class="bi bi-people-fill"></i></span>
+      <span class="sidebar-link-label"><%= t('navFloorSpeaker') %></span>
     </a>
     <% } %>
   </nav>

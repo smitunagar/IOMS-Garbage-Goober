@@ -184,5 +184,17 @@
   "holidayRemovedSuccess": "\u2705 Urlaubszeitraum entfernt. Zuk\u00fcnftiger Plan neu berechnet.",
   "confirmRemoveHoliday": "Diesen Urlaubszeitraum entfernen?",
 
-  "overrideCurrentWeekOnly": "Override gilt nur f\u00fcr die aktuelle Woche und umgeht die Wochensperre."
+  "overrideCurrentWeekOnly": "Override gilt nur f\u00fcr die aktuelle Woche und umgeht die Wochensperre.",
+
+  "registerAsFloorSpeaker": "Als Etagensprecher registrieren",
+  "floorSpeakerCodeLabel": "Etagensprecher-Code",
+  "floorSpeakerFloorLabel": "Meine Etage",
+  "floorSpeakerSignupNote": "Du verwaltest Rotation, Urlaub und Zimmerstatus f\u00fcr deine Etage.",
+  "floorSpeakerLabel": "Etagensprecher – Etage {floor}",
+  "floorSpeakerManagingLabel": "Verwaltung der Rotation f\u00fcr Etage {floor}",
+  "navFloorSpeaker": "Meine Etage",
+  "navFloorSpeakerSection": "Etagensprecher",
+  "errorInvalidFloorSpeakerCode": "Ung\u00fcltiger Etagensprecher-Code.",
+  "errorFloorRequired": "Bitte w\u00e4hle die Etage aus, die du verwaltest.",
+  "errorFloorSpeakerExists": "F\u00fcr diese Etage existiert bereits ein Etagensprecher."
 }

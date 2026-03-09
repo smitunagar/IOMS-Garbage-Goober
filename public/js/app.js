@@ -96,3 +96,15 @@ function toggleRoomActive(roomNum, floorId) {
     if (data.ok) location.reload();
   });
 }
+
+function toggleRoomActiveFS(roomNum, floorId) {
+  fetch(`/floor-speaker/rotation/${floorId}/toggle-room`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roomNumber: roomNum }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) location.reload();
+  });
+}

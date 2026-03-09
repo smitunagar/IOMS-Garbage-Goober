@@ -130,6 +130,12 @@ async function initDatabase() {
     );
   `);
 
+  // ── Schema migrations (add new columns if they don't exist) ──────────────
+  await p.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'student';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS managed_floor_id INTEGER;
+  `);
+
   // ── Seed rooms ────────────────────────────────────────────────────────────
   const { rows: roomRows } = await p.query('SELECT COUNT(*)::int AS cnt FROM rooms');
   if (roomRows[0].cnt === 0) {

@@ -184,5 +184,17 @@
   "holidayRemovedSuccess": "\u2705 Holiday period removed. Future schedule recalculated.",
   "confirmRemoveHoliday": "Remove this holiday period?",
 
-  "overrideCurrentWeekOnly": "Override applies to the current week only and bypasses the week-lock."
+  "overrideCurrentWeekOnly": "Override applies to the current week only and bypasses the week-lock.",
+
+  "registerAsFloorSpeaker": "Register as Floor Speaker",
+  "floorSpeakerCodeLabel": "Floor Speaker Code",
+  "floorSpeakerFloorLabel": "Floor I manage",
+  "floorSpeakerSignupNote": "You will manage rotation, holidays and room status for your floor.",
+  "floorSpeakerLabel": "Floor Speaker – Floor {floor}",
+  "floorSpeakerManagingLabel": "Managing rotation for Floor {floor}",
+  "navFloorSpeaker": "My Floor",
+  "navFloorSpeakerSection": "Floor Speaker",
+  "errorInvalidFloorSpeakerCode": "Invalid floor speaker code.",
+  "errorFloorRequired": "Please select the floor you manage.",
+  "errorFloorSpeakerExists": "A floor speaker for this floor already exists."
 }

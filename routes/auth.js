@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const db = require('../config/database').getDb;
 const { TOTAL_FLOORS, ROOMS_PER_FLOOR, roomsForFloor } = require('../utils/constants');
 
+const FLOOR_SPEAKER_CODE = 'WebMeister360_1_FS_425';
+
 const router = express.Router();
 
 /* ── GET /login ──────────────────────────────────────────────────────────── */
@@ -85,6 +87,55 @@ router.post('/signup', async (req, res) => {
     return req.session.save(() => res.redirect('/signup'));
   }
 
+  // ── Floor Speaker registration branch ─────────────────────────────────────
+  if (req.body.is_floor_speaker === 'on') {
+    const fsCode  = (req.body.fs_code  || '').trim();
+    const fsFloor = parseInt(req.body.fs_floor);
+
+    if (fsCode !== FLOOR_SPEAKER_CODE) {
+      req.session.flash = { error: t('errorInvalidFloorSpeakerCode') };
+      return req.session.save(() => res.redirect('/signup'));
+    }
+    if (!fsFloor || fsFloor < 1 || fsFloor > TOTAL_FLOORS) {
+      req.session.flash = { error: t('errorFloorRequired') };
+      return req.session.save(() => res.redirect('/signup'));
+    }
+
+    let fsExists;
+    try {
+      fsExists = await db().queryOne(
+        "SELECT id FROM users WHERE role = 'floor_speaker' AND managed_floor_id = $1",
+        [fsFloor]
+      );
+    } catch (err) {
+      console.error('Floor speaker check error:', err);
+      req.session.flash = { error: t('errorGeneric', { error: 'Database error' }) };
+      return req.session.save(() => res.redirect('/signup'));
+    }
+
+    if (fsExists) {
+      req.session.flash = { error: t('errorFloorSpeakerExists') };
+      return req.session.save(() => res.redirect('/signup'));
+    }
+
+    try {
+      const hash = bcrypt.hashSync(password, 10);
+      const row = await db().queryOne(
+        `INSERT INTO users (email, password_hash, name, role, managed_floor_id, floor_id, is_onboarded, language)
+         VALUES ($1, $2, $3, 'floor_speaker', $4, $4, 1, $5) RETURNING id`,
+        [email.toLowerCase().trim(), hash, name.trim(), fsFloor, req.body.language || 'de']
+      );
+      req.session.userId = row.id;
+      req.session.language = req.body.language || 'de';
+      return req.session.save(() => res.redirect('/home'));
+    } catch (err) {
+      console.error('Floor speaker signup insert error:', err);
+      req.session.flash = { error: t('errorGeneric', { error: err.message }) };
+      return req.session.save(() => res.redirect('/signup'));
+    }
+  }
+
+  // ── Normal student registration ───────────────────────────────────────────
   try {
     const hash = bcrypt.hashSync(password, 10);
     const row = await db().queryOne(
