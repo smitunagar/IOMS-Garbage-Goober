@@ -88,6 +88,16 @@ app.use('/floor-speaker', require('./routes/floor_speaker'));
 app.use('/api', require('./routes/ai_scanner'));
 app.use('/holidays', require('./routes/holidays'));
 
+// PWA offline page
+app.get('/offline', (req, res) => {
+  res.render('offline', { pageTitle: 'Offline', layout: false });
+});
+
+// Digital Asset Links for TWA (Play Store)
+app.get('/.well-known/assetlinks.json', (req, res) => {
+  res.json(require('./config/assetlinks.json'));
+});
+
 // Root redirect
 app.get('/', (req, res) => {
   if (res.locals.user) {
