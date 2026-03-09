@@ -5,6 +5,7 @@ const cloudinary = require('cloudinary').v2;
 const db = require('../config/database').getDb;
 const { requireAuth, requireOnboarded } = require('../middleware/auth');
 const { BIN_TYPES } = require('../utils/constants');
+const { fmtDateTime } = require('../utils/rotation');
 
 const router = express.Router();
 
@@ -42,6 +43,50 @@ router.get('/log', requireAuth, requireOnboarded, (req, res) => {
     layout: 'layout',
     pageTitle: res.locals.t('logDisposalTitle'),
     BIN_TYPES,
+  });
+});
+
+/* ── GET /disposal/feed ──────────────────────────────────────────────────── */
+router.get('/feed', requireAuth, requireOnboarded, async (req, res) => {
+  const PER_PAGE = 24;
+  const page     = Math.max(1, parseInt(req.query.page) || 1);
+  const offset   = (page - 1) * PER_PAGE;
+
+  const rows = await db().query(
+    `SELECT de.id, de.floor_id, de.room_id, de.bin_types, de.note,
+            de.photo_path, de.created_at,
+            u.name AS user_name
+     FROM disposal_events de
+     LEFT JOIN users u ON u.id = de.user_id
+     ORDER BY de.created_at DESC
+     LIMIT $1 OFFSET $2`,
+    [PER_PAGE + 1, offset]
+  );
+
+  const hasMore = rows.length > PER_PAGE;
+  const entries = rows.slice(0, PER_PAGE).map(e => {
+    let binTypes = [];
+    try { binTypes = JSON.parse(e.bin_types); } catch (_) {}
+    return {
+      id:        e.id,
+      userName:  e.user_name || '—',
+      floorId:   e.floor_id,
+      roomId:    e.room_id,
+      binTypes,
+      note:      e.note,
+      photoPath: e.photo_path,
+      date:      e.created_at,
+    };
+  });
+
+  res.render('disposal/feed', {
+    layout:    'layout',
+    pageTitle: res.locals.lang === 'de' ? 'Entsorgungsprotokoll' : 'Disposal Feed',
+    entries,
+    page,
+    hasMore,
+    BIN_TYPES,
+    fmtDateTime,
   });
 });
 

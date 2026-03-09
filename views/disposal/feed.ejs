@@ -1,0 +1,239 @@
+<!-- ════════════════════════════════════════════════════════
+     Disposal Feed – community waste disposal photo log
+     ════════════════════════════════════════════════════════ -->
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-0">
+      <i class="bi bi-camera-fill me-2" style="color:#2E7D32"></i>
+      <%= lang === 'de' ? 'Entsorgungsprotokoll' : 'Disposal Feed' %>
+    </h4>
+    <p class="text-muted small mb-0">
+      <%= lang === 'de' ? 'Alle Entsorgungen – Fotos, Behälter, Datum' : 'All disposals – photos, bins, date & time' %>
+    </p>
+  </div>
+  <a href="/disposal/log" class="btn btn-sm btn-primary">
+    <i class="bi bi-plus-lg me-1"></i>
+    <%= lang === 'de' ? 'Neu erfassen' : 'Log disposal' %>
+  </a>
+</div>
+
+<% if (entries.length === 0) { %>
+  <div class="empty-state text-center py-5">
+    <i class="bi bi-camera" style="font-size:3rem;color:#ccc"></i>
+    <p class="fw-semibold mt-3 mb-1"><%= lang === 'de' ? 'Noch keine Einträge' : 'No entries yet' %></p>
+    <p class="text-muted small"><%= lang === 'de' ? 'Sobald Müll entsorgt wird, erscheint er hier.' : 'Disposals will appear here once logged.' %></p>
+  </div>
+<% } else { %>
+
+  <!-- ── Photo grid ──────────────────────────────────────────────────── -->
+  <div class="disposal-feed-grid">
+    <% entries.forEach(e => { %>
+      <div class="disposal-feed-card">
+
+        <!-- Photo -->
+        <% if (e.photoPath) { %>
+          <a href="<%= e.photoPath %>" target="_blank" rel="noopener" class="disposal-feed-photo-link">
+            <img src="<%= e.photoPath %>" alt="Disposal photo" class="disposal-feed-photo" loading="lazy">
+          </a>
+        <% } else { %>
+          <div class="disposal-feed-photo-placeholder">
+            <i class="bi bi-image" style="font-size:2rem;color:#bbb"></i>
+          </div>
+        <% } %>
+
+        <!-- Bin badges overlaid bottom-left on photo -->
+        <div class="disposal-feed-bins">
+          <% e.binTypes.forEach(bt => { %>
+            <% const meta = BIN_TYPES[bt]; %>
+            <% if (meta) { %>
+              <span class="disposal-feed-bin-chip" style="background:<%= meta.color %>">
+                <%= meta.emoji %> <%= lang === 'de' ? meta.short_de : meta.short_en %>
+              </span>
+            <% } %>
+          <% }); %>
+        </div>
+
+        <!-- Card body -->
+        <div class="disposal-feed-body">
+          <!-- User + location -->
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="disposal-feed-avatar">
+              <%= e.userName.charAt(0).toUpperCase() %>
+            </div>
+            <div class="disposal-feed-meta">
+              <span class="disposal-feed-username"><%= e.userName %></span>
+              <span class="disposal-feed-location">
+                <i class="bi bi-building me-1"></i><%= lang === 'de' ? 'Etage' : 'Floor' %> <%= e.floorId %>
+                &nbsp;·&nbsp;
+                <i class="bi bi-door-open me-1"></i><%= lang === 'de' ? 'Zimmer' : 'Room' %> <%= e.roomId %>
+              </span>
+            </div>
+          </div>
+
+          <!-- Note -->
+          <% if (e.note) { %>
+            <p class="disposal-feed-note">"<%= e.note %>"</p>
+          <% } %>
+
+          <!-- Date/time -->
+          <div class="disposal-feed-time">
+            <i class="bi bi-clock me-1"></i><%= fmtDateTime(new Date(e.date)) %>
+          </div>
+        </div>
+
+      </div>
+    <% }); %>
+  </div>
+
+  <!-- ── Pagination ───────────────────────────────────────────────── -->
+  <div class="d-flex justify-content-between align-items-center mt-4">
+    <% if (page > 1) { %>
+      <a href="/disposal/feed?page=<%= page - 1 %>" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-chevron-left me-1"></i><%= lang === 'de' ? 'Zurück' : 'Previous' %>
+      </a>
+    <% } else { %>
+      <span></span>
+    <% } %>
+
+    <span class="text-muted small">
+      <%= lang === 'de' ? 'Seite' : 'Page' %> <%= page %>
+    </span>
+
+    <% if (hasMore) { %>
+      <a href="/disposal/feed?page=<%= page + 1 %>" class="btn btn-outline-secondary btn-sm">
+        <%= lang === 'de' ? 'Weiter' : 'Next' %><i class="bi bi-chevron-right ms-1"></i>
+      </a>
+    <% } else { %>
+      <span></span>
+    <% } %>
+  </div>
+
+<% } %>
+
+
+<!-- ════════════════════════════════════════════════════════
+     Disposal Feed CSS (scoped)
+     ════════════════════════════════════════════════════════ -->
+<style>
+.disposal-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.disposal-feed-card {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+  position: relative;
+  transition: transform .15s, box-shadow .15s;
+}
+.disposal-feed-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+/* Photo */
+.disposal-feed-photo-link { display: block; }
+.disposal-feed-photo {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+.disposal-feed-photo-placeholder {
+  width: 100%;
+  height: 180px;
+  background: #f4f4f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Bin chips overlaid on photo */
+.disposal-feed-bins {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.disposal-feed-bin-chip {
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  backdrop-filter: blur(2px);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+
+/* Card body */
+.disposal-feed-body {
+  padding: 0.85rem 1rem 0.9rem;
+}
+
+/* Avatar + meta row */
+.disposal-feed-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2E7D32;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.disposal-feed-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.disposal-feed-username {
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.disposal-feed-location {
+  font-size: 0.72rem;
+  color: #888;
+}
+
+/* Note */
+.disposal-feed-note {
+  font-size: 0.78rem;
+  color: #555;
+  margin: 0.35rem 0 0.25rem;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Time */
+.disposal-feed-time {
+  font-size: 0.72rem;
+  color: #aaa;
+  margin-top: 0.4rem;
+}
+
+@media (max-width: 480px) {
+  .disposal-feed-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+  .disposal-feed-photo,
+  .disposal-feed-photo-placeholder {
+    height: 130px;
+  }
+}
+</style>
