@@ -2,6 +2,8 @@ const express = require('express');
 const db = require('../config/database').getDb;
 const { requireAuth, requireOnboarded } = require('../middleware/auth');
 const { BIN_TYPES, MAX_BIN_ALERTS_PER_DAY } = require('../utils/constants');
+const { getDutyForWeek, getWeekStartStr } = require('../utils/rotation');
+const { sendBinAlertEmail } = require('../utils/mailer');
 
 const router = express.Router();
 
@@ -58,6 +60,32 @@ router.post('/report', requireAuth, requireOnboarded, async (req, res) => {
     'INSERT INTO bin_alerts (user_id, floor_id, bin_type, note) VALUES ($1, $2, $3, $4)',
     [user.id, user.floor_id, binType, note || null]
   );
+
+  // ── Email notification to duty person (fire-and-forget) ──────────────────
+  try {
+    const dutyRoomId = await getDutyForWeek(db(), user.floor_id, getWeekStartStr());
+    if (dutyRoomId) {
+      const dutyUser = await db().queryOne(
+        'SELECT name, email FROM users WHERE floor_id = $1 AND room_id = $2 AND is_onboarded = 1 LIMIT 1',
+        [user.floor_id, dutyRoomId]
+      );
+      if (dutyUser) {
+        const bin = BIN_TYPES[binType];
+        sendBinAlertEmail({
+          toEmail:      dutyUser.email,
+          toName:       dutyUser.name,
+          binLabel:     bin.label_de,
+          binEmoji:     bin.emoji,
+          binColor:     bin.color,
+          reporterName: user.name,
+          floor:        user.floor_id,
+          note:         note || null,
+        }).catch(err => console.error('[Mailer] sendBinAlertEmail failed:', err));
+      }
+    }
+  } catch (err) {
+    console.error('[Mailer] Notification lookup error:', err);
+  }
 
   req.session.flash = { success: t('alertSentSuccess') };
   res.redirect('/home');
