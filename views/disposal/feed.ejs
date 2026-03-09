@@ -32,10 +32,19 @@
       <div class="disposal-feed-card">
 
         <!-- Photo -->
-        <% if (e.photoPath) { %>
-          <a href="<%= e.photoPath %>" target="_blank" rel="noopener" class="disposal-feed-photo-link">
-            <img src="<%= e.photoPath %>" alt="Disposal photo" class="disposal-feed-photo" loading="lazy">
+        <% if (e.photoPaths && e.photoPaths.length > 0) { %>
+          <a href="<%= e.photoPaths[0] %>" target="_blank" rel="noopener" class="disposal-feed-photo-link">
+            <img src="<%= e.photoPaths[0] %>" alt="Disposal photo" class="disposal-feed-photo" loading="lazy">
           </a>
+          <% if (e.photoPaths.length > 1) { %>
+          <div class="disposal-feed-extra-photos">
+            <% e.photoPaths.slice(1).forEach(url => { %>
+              <a href="<%= url %>" target="_blank" rel="noopener">
+                <img src="<%= url %>" alt="" class="disposal-feed-thumb" loading="lazy">
+              </a>
+            <% }); %>
+          </div>
+          <% } %>
         <% } else { %>
           <div class="disposal-feed-photo-placeholder">
             <i class="bi bi-image" style="font-size:2rem;color:#bbb"></i>
@@ -150,6 +159,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Extra thumbnail row for multi-photo entries */
+.disposal-feed-extra-photos {
+  display: flex;
+  gap: 4px;
+  padding: 4px 6px;
+  background: #f0f0f0;
+}
+.disposal-feed-thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid #fff;
 }
 
 /* Bin chips overlaid on photo */

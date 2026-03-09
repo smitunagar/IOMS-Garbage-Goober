@@ -67,6 +67,13 @@ router.get('/feed', requireAuth, requireOnboarded, async (req, res) => {
   const entries = rows.slice(0, PER_PAGE).map(e => {
     let binTypes = [];
     try { binTypes = JSON.parse(e.bin_types); } catch (_) {}
+    let photoPaths = [];
+    if (e.photo_path) {
+      try {
+        const p = JSON.parse(e.photo_path);
+        photoPaths = Array.isArray(p) ? p : [e.photo_path];
+      } catch (_) { photoPaths = [e.photo_path]; }
+    }
     return {
       id:        e.id,
       userName:  e.user_name || '—',
@@ -74,7 +81,7 @@ router.get('/feed', requireAuth, requireOnboarded, async (req, res) => {
       roomId:    e.room_id,
       binTypes,
       note:      e.note,
-      photoPath: e.photo_path,
+      photoPaths,
       date:      e.created_at,
     };
   });
@@ -91,9 +98,10 @@ router.get('/feed', requireAuth, requireOnboarded, async (req, res) => {
 });
 
 /* ── POST /disposal/log ──────────────────────────────────────────────────── */
-router.post('/log', requireAuth, requireOnboarded, upload.single('photo'), async (req, res) => {
+router.post('/log', requireAuth, requireOnboarded, upload.array('photos', 4), async (req, res) => {
   const user = res.locals.user;
-  const t = res.locals.t;
+  const lang = res.locals.lang || 'en';
+  const t    = res.locals.t;
   const { bins, note } = req.body;
 
   // Validate bins
@@ -103,27 +111,36 @@ router.post('/log', requireAuth, requireOnboarded, upload.single('photo'), async
     return res.redirect('/disposal/log');
   }
 
-  // Require photo
-  if (!req.file) {
-    const lang = res.locals.lang || 'en';
-    req.session.flash = { error: lang === 'de' ? 'Bitte ein Foto als Nachweis hochladen.' : 'Please upload a photo as proof.' };
+  // Require one photo per bin
+  const files = req.files || [];
+  if (files.length === 0) {
+    req.session.flash = { error: lang === 'de' ? 'Bitte für jeden Behälter ein Foto hochladen.' : 'Please upload a photo for each bin.' };
+    return res.redirect('/disposal/log');
+  }
+  if (files.length < selectedBins.length) {
+    req.session.flash = { error: lang === 'de'
+      ? `Bitte für alle ${selectedBins.length} Behälter ein Foto hinzufügen (${files.length} hochgeladen).`
+      : `Please add a photo for all ${selectedBins.length} bins (${files.length} uploaded).` };
     return res.redirect('/disposal/log');
   }
 
-  let photoPath = null;
+  // Upload all photos to Cloudinary in parallel
+  let photoPaths = [];
   try {
-    const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype);
-    photoPath = result.secure_url;
+    const results = await Promise.all(
+      files.map(f => uploadToCloudinary(f.buffer, f.mimetype))
+    );
+    photoPaths = results.map(r => r.secure_url);
   } catch (err) {
     console.error('Cloudinary upload error:', err);
-    req.session.flash = { error: t('errorGeneric', { error: 'Photo upload failed' }) };
+    req.session.flash = { error: lang === 'de' ? 'Foto-Upload fehlgeschlagen. Bitte erneut versuchen.' : 'Photo upload failed. Please try again.' };
     return res.redirect('/disposal/log');
   }
 
   await db().run(
     `INSERT INTO disposal_events (user_id, room_id, floor_id, bin_types, note, photo_path, qr_verified)
      VALUES ($1, $2, $3, $4, $5, $6, 1)`,
-    [user.id, user.room_id, user.floor_id, JSON.stringify(selectedBins), note || null, photoPath]
+    [user.id, user.room_id, user.floor_id, JSON.stringify(selectedBins), note || null, JSON.stringify(photoPaths)]
   );
 
   req.session.flash = { success: t('disposalLoggedSuccess') };
