@@ -43,11 +43,14 @@
   <div class="col-12 col-md-6">
     <div class="stat-card h-100">
       <h6 class="fw-semibold mb-3"><%= t('thisWeekDisposals') %></h6>
-      <div class="d-flex flex-wrap gap-2 mb-3">
+      <div class="d-flex flex-wrap gap-3 mb-3">
         <% Object.entries(BIN_TYPES).forEach(([key, bt]) => { %>
-          <div class="d-flex align-items-center gap-1 small">
-            <span><%= bt.emoji %></span>
-            <span class="fw-bold" style="color:<%= bt.color %>"><%= binCounts[key] || 0 %></span>
+          <div class="d-flex flex-column align-items-center gap-1">
+            <div class="bin-stat-chip" style="background:<%= bt.color %>;">
+              <i class="bi bi-trash3-fill"></i>
+              <span class="fw-bold"><%= binCounts[key] || 0 %></span>
+            </div>
+            <span class="bin-stat-label"><%= lang === 'de' ? bt.short_de : bt.short_en %></span>
           </div>
         <% }); %>
       </div>

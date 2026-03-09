@@ -950,3 +950,26 @@
   color: #ff6b6b;
   border-color: rgba(239, 83, 80, 0.7);
 }
+
+/* ── Bin stat chips on dashboard ─────────────────────────────────── */
+.bin-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  white-space: nowrap;
+}
+.bin-stat-chip i {
+  font-size: 0.95rem;
+}
+.bin-stat-label {
+  font-size: 0.62rem;
+  color: #757575;
+  letter-spacing: 0.03em;
+  text-align: center;
+}
