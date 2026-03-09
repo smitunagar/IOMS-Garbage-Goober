@@ -139,7 +139,7 @@ router.post('/scan-waste', requireAuth, upload.single('image'), async (req, res)
   }
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const base64 = req.file.buffer.toString('base64');
   const mime   = req.file.mimetype || 'image/jpeg';
@@ -158,9 +158,11 @@ router.post('/scan-waste', requireAuth, upload.single('image'), async (req, res)
       prompt,
       { inlineData: { mimeType: mime, data: base64 } },
     ]);
-    const raw     = result.response.text().trim();
-    const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/i, '').trim();
-    aiResult = JSON.parse(jsonStr);
+    const raw = result.response.text().trim();
+    // Extract JSON object from anywhere in the response (handles markdown fences)
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON object in response: ' + raw.slice(0, 200));
+    aiResult = JSON.parse(jsonMatch[0]);
   } catch (err) {
     console.error('AI scanner error:', err.message);
     return res.status(500).json({ ok: false, error: 'Could not analyse the image. Please try again.' });
