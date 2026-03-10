@@ -156,7 +156,7 @@ async function _computeDuty(db, floorId, weekStartStr, activeRooms, anchor, opts
   let startIdx;
   if (store) {
     const lastNorm = await db.queryOne(
-      'SELECT assigned_room FROM duty_schedule WHERE floor_id = $1 AND is_from_pending = 0 AND is_override = 0 ORDER BY week_start DESC LIMIT 1',
+      'SELECT assigned_room FROM duty_schedule WHERE floor_id = $1 AND is_from_pending = 0 ORDER BY week_start DESC LIMIT 1',
       [floorId]
     );
     if (lastNorm) {
@@ -243,6 +243,11 @@ async function currentDutyRoom(db, floorId) {
 async function adminOverrideDuty(db, floorId, weekStartStr, roomNumber) {
   await db.run('DELETE FROM duty_schedule WHERE floor_id = $1 AND week_start = $2', [floorId, weekStartStr]);
   await _storeDutySchedule(db, floorId, weekStartStr, roomNumber, true, false);
+  // Clear any future pre-computed entries so they recompute from the new override position
+  await db.run(
+    'DELETE FROM duty_schedule WHERE floor_id = $1 AND week_start > $2',
+    [floorId, weekStartStr]
+  );
 }
 
 async function invalidateFutureSchedule(db, floorId) {
@@ -269,7 +274,7 @@ async function upcomingDutyEntries(db, floorId, weeksAhead) {
   );
 
   const lastNormEntry = await db.queryOne(
-    'SELECT assigned_room FROM duty_schedule WHERE floor_id = $1 AND is_from_pending = 0 AND is_override = 0 ORDER BY week_start DESC LIMIT 1',
+    'SELECT assigned_room FROM duty_schedule WHERE floor_id = $1 AND is_from_pending = 0 ORDER BY week_start DESC LIMIT 1',
     [floorId]
   );
   const lastNormRef = { value: lastNormEntry ? lastNormEntry.assigned_room : null };
