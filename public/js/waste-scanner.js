@@ -57,8 +57,13 @@
       .then(data => {
         document.getElementById('wsc-scan-anim').style.display = 'none';
         if (data.ok) {
-          renderResult(data);
-          setView('result');
+          try {
+            renderResult(data);
+            setView('result');
+          } catch (renderErr) {
+            console.error('renderResult error:', renderErr);
+            showError('Could not display results. Please try again.');
+          }
         } else {
           showError(data.error || 'Something went wrong. Please try again.');
         }

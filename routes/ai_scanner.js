@@ -190,9 +190,14 @@ router.post('/scan-waste', requireAuth, upload.single('image'), async (req, res)
       { inlineData: { mimeType: mime, data: base64 } },
     ]);
     const raw = result.response.text().trim();
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No JSON object in response: ' + raw.slice(0, 200));
-    aiResult = JSON.parse(jsonMatch[0]);
+
+    // Match JSON object OR JSON array (Gemini sometimes returns raw array)
+    const jsonMatch = raw.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    if (!jsonMatch) throw new Error('No JSON in response: ' + raw.slice(0, 300));
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    // Normalise: raw array → wrap into {items:[...]}
+    aiResult = Array.isArray(parsed) ? { items: parsed } : parsed;
   } catch (err) {
     console.error('AI scanner error:', err.message);
     return res.status(500).json({ ok: false, error: 'Could not analyse the image. Please try again.' });
