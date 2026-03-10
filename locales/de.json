@@ -202,6 +202,7 @@
   "navFloorSpeakerSection": "Etagensprecher",
   "errorInvalidFloorSpeakerCode": "Ung\u00fcltiger Etagensprecher-Code.",
   "errorFloorRequired": "Bitte w\u00e4hle die Etage aus, die du verwaltest.",
+  "errorRoomRequired": "Bitte w\u00e4hle dein Zimmer aus.",
   "errorFloorSpeakerExists": "Für diese Etage existiert bereits ein Etagensprecher.",
 
   "navHoliday": "Urlaub",

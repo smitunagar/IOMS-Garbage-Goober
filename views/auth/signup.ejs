@@ -75,12 +75,21 @@
             </div>
             <div class="mb-3">
               <label class="form-label small fw-semibold text-muted"><%= t('floorSpeakerFloorLabel') %></label>
-              <select name="fs_floor" id="fsFloor" class="form-select">
+              <select name="fs_floor" id="fsFloor" class="form-select" onchange="fsFloorChanged(this.value)">
                 <option value="">— <%= t('floorLabel') %> —</option>
                 <% for (let f = 1; f <= 7; f++) { %>
                   <option value="<%= f %>"><%= t('floorChipLabel', { floor: f }) %></option>
                 <% } %>
               </select>
+            </div>
+            <!-- Room grid – shown after floor is picked -->
+            <div id="fsRoomWrap" style="display:none;" class="mb-3">
+              <label class="form-label small fw-semibold text-muted"><%= t('roomLabel') %></label>
+              <div class="room-grid" id="fsRoomGrid"></div>
+              <input type="hidden" name="fs_room" id="fsRoom" value="">
+              <div class="form-text text-danger" id="fsRoomError" style="display:none;">
+                <i class="bi bi-exclamation-circle me-1"></i><%= t('errorRoomRequired') %>
+              </div>
             </div>
             <p class="text-muted small mb-0">
               <i class="bi bi-info-circle me-1"></i><%= t('floorSpeakerSignupNote') %>
@@ -105,7 +114,50 @@
         const floorSel  = document.getElementById('fsFloor');
         codeInput.required = show;
         floorSel.required  = show;
+        if (!show) {
+          document.getElementById('fsRoomWrap').style.display = 'none';
+          document.getElementById('fsRoom').value = '';
+        }
       }
+
+      function fsFloorChanged(floorId) {
+        const wrap = document.getElementById('fsRoomWrap');
+        const grid = document.getElementById('fsRoomGrid');
+        const inp  = document.getElementById('fsRoom');
+        inp.value = '';
+        grid.innerHTML = '';
+        if (!floorId) { wrap.style.display = 'none'; return; }
+        wrap.style.display = 'block';
+        document.getElementById('fsRoomError').style.display = 'none';
+        const f = parseInt(floorId);
+        for (let i = 1; i <= 18; i++) {
+          if (i === 9 || i === 11) continue;
+          const roomId = f * 100 + i;
+          const label  = (i === 8 || i === 10) ? roomId + '/' + (roomId + 1) : String(roomId);
+          const cell   = document.createElement('div');
+          cell.className = 'room-cell';
+          cell.dataset.room = roomId;
+          cell.textContent = label;
+          cell.onclick = function() {
+            document.querySelectorAll('#fsRoomGrid .room-cell').forEach(c => c.classList.remove('selected'));
+            cell.classList.add('selected');
+            inp.value = roomId;
+            document.getElementById('fsRoomError').style.display = 'none';
+          };
+          grid.appendChild(cell);
+        }
+      }
+
+      // Validate room picked before submit
+      document.querySelector('form').addEventListener('submit', function(e) {
+        const fsOn = document.getElementById('isFloorSpeaker').checked;
+        if (fsOn && !document.getElementById('fsRoom').value) {
+          e.preventDefault();
+          const errEl = document.getElementById('fsRoomError');
+          errEl.style.display = 'block';
+          errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
     </script>
 
     <!-- WebMeister360 credit -->

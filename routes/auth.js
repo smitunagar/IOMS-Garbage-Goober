@@ -100,6 +100,11 @@ router.post('/signup', async (req, res) => {
       req.session.flash = { error: t('errorFloorRequired') };
       return req.session.save(() => res.redirect('/signup'));
     }
+    const fsRoom = parseInt(req.body.fs_room);
+    if (!fsRoom) {
+      req.session.flash = { error: t('errorRoomRequired') };
+      return req.session.save(() => res.redirect('/signup'));
+    }
 
     let fsExists;
     try {
@@ -121,13 +126,13 @@ router.post('/signup', async (req, res) => {
     try {
       const hash = bcrypt.hashSync(password, 10);
       const row = await db().queryOne(
-        `INSERT INTO users (email, password_hash, name, role, managed_floor_id, floor_id, is_onboarded, language)
-         VALUES ($1, $2, $3, 'floor_speaker', $4, $4, 0, $5) RETURNING id`,
-        [email.toLowerCase().trim(), hash, name.trim(), fsFloor, req.body.language || 'de']
+        `INSERT INTO users (email, password_hash, name, role, managed_floor_id, floor_id, room_id, is_onboarded, language)
+         VALUES ($1, $2, $3, 'floor_speaker', $4, $4, $5, 1, $6) RETURNING id`,
+        [email.toLowerCase().trim(), hash, name.trim(), fsFloor, fsRoom, req.body.language || 'de']
       );
       req.session.userId = row.id;
       req.session.language = req.body.language || 'de';
-      return req.session.save(() => res.redirect('/onboarding'));
+      return req.session.save(() => res.redirect('/home'));
     } catch (err) {
       console.error('Floor speaker signup insert error:', err);
       req.session.flash = { error: t('errorGeneric', { error: err.message }) };
