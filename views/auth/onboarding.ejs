@@ -26,17 +26,26 @@
         <!-- Floor selection -->
         <div class="mb-4">
           <label class="form-label small fw-semibold"><%= t('floorLabel') %></label>
-          <div class="d-flex flex-wrap gap-2">
-            <% for (let f = 1; f <= totalFloors; f++) { %>
-              <button type="button"
-                      class="btn btn-outline-secondary floor-chip"
-                      data-floor="<%= f %>"
-                      onclick="selectFloor(<%= f %>)">
-                <%= t('floorChipLabel', { floor: f }) %>
+          <% if (user && user.role === 'floor_speaker') { %>
+            <div class="d-flex flex-wrap gap-2">
+              <button type="button" class="btn btn-outline-secondary floor-chip active" disabled>
+                <%= t('floorChipLabel', { floor: user.floor_id }) %>
               </button>
-            <% } %>
-          </div>
-          <input type="hidden" name="floor" id="selectedFloor" value="" required>
+            </div>
+            <input type="hidden" name="floor" id="selectedFloor" value="<%= user.floor_id %>">
+          <% } else { %>
+            <div class="d-flex flex-wrap gap-2">
+              <% for (let f = 1; f <= totalFloors; f++) { %>
+                <button type="button"
+                        class="btn btn-outline-secondary floor-chip"
+                        data-floor="<%= f %>"
+                        onclick="selectFloor(<%= f %>)">
+                  <%= t('floorChipLabel', { floor: f }) %>
+                </button>
+              <% } %>
+            </div>
+            <input type="hidden" name="floor" id="selectedFloor" value="" required>
+          <% } %>
         </div>
 
         <!-- Room grid -->
@@ -60,6 +69,10 @@
       </form>
 
     </div><!-- /.lp-card -->
+
+    <% if (user && user.role === 'floor_speaker') { %>
+    <script>document.addEventListener('DOMContentLoaded', () => selectFloor(<%= user.floor_id %>));</script>
+    <% } %>
 
     <!-- WebMeister360 credit -->
     <div class="lp-wm-credit">

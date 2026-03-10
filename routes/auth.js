@@ -122,12 +122,12 @@ router.post('/signup', async (req, res) => {
       const hash = bcrypt.hashSync(password, 10);
       const row = await db().queryOne(
         `INSERT INTO users (email, password_hash, name, role, managed_floor_id, floor_id, is_onboarded, language)
-         VALUES ($1, $2, $3, 'floor_speaker', $4, $4, 1, $5) RETURNING id`,
+         VALUES ($1, $2, $3, 'floor_speaker', $4, $4, 0, $5) RETURNING id`,
         [email.toLowerCase().trim(), hash, name.trim(), fsFloor, req.body.language || 'de']
       );
       req.session.userId = row.id;
       req.session.language = req.body.language || 'de';
-      return req.session.save(() => res.redirect('/home'));
+      return req.session.save(() => res.redirect('/onboarding'));
     } catch (err) {
       console.error('Floor speaker signup insert error:', err);
       req.session.flash = { error: t('errorGeneric', { error: err.message }) };
@@ -163,6 +163,7 @@ router.get('/onboarding', async (req, res) => {
     pageTitle: 'Onboarding',
     totalFloors: TOTAL_FLOORS,
     roomsPerFloor: ROOMS_PER_FLOOR,
+    user,
   });
 });
 
