@@ -199,7 +199,7 @@ function selectFloor(floorId) {
   // Show rooms for this floor (X09 and X11 are merged into X08/X09 and X10/X11)
   const grid = document.getElementById('roomGrid');
   grid.innerHTML = '';
-  for (let i = 1; i <= 16; i++) {
+  for (let i = 1; i <= 18; i++) {
     if (i === 9 || i === 11) continue; // merged – not shown separately
     const roomId = floorId * 100 + i;
     const label = (i === 8 || i === 10) ? `${roomId}/${roomId + 1}` : String(roomId);
