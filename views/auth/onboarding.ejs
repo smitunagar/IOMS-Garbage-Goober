@@ -26,13 +26,13 @@
         <!-- Floor selection -->
         <div class="mb-4">
           <label class="form-label small fw-semibold"><%= t('floorLabel') %></label>
-          <% if (user && user.role === 'floor_speaker') { %>
+          <% if (lockedFloor) { %>
             <div class="d-flex flex-wrap gap-2">
               <button type="button" class="btn btn-outline-secondary floor-chip active" disabled>
-                <%= t('floorChipLabel', { floor: user.floor_id }) %>
+                <%= t('floorChipLabel', { floor: lockedFloor }) %>
               </button>
             </div>
-            <input type="hidden" name="floor" id="selectedFloor" value="<%= user.floor_id %>">
+            <input type="hidden" name="floor" id="selectedFloor" value="<%= lockedFloor %>">
           <% } else { %>
             <div class="d-flex flex-wrap gap-2">
               <% for (let f = 1; f <= totalFloors; f++) { %>
@@ -51,11 +51,24 @@
         <!-- Room grid -->
         <div class="mb-4">
           <label class="form-label small fw-semibold"><%= t('roomLabel') %></label>
-          <div class="room-grid" id="roomGrid" data-per-floor="<%= roomsPerFloor %>">
-            <p class="text-muted small w-100 text-center py-3">
-              <i class="bi bi-arrow-up"></i> <%= t('floorLabel') %>
-            </p>
-          </div>
+          <% if (lockedFloor) { %>
+            <div class="room-grid" id="roomGrid" data-per-floor="<%= roomsPerFloor %>">
+              <% for (let i = 1; i <= 16; i++) { %>
+                <% if (i === 9 || i === 11) continue; %>
+                <% const rId = lockedFloor * 100 + i; %>
+                <% const rLabel = (i === 8 || i === 10) ? `${rId}/${rId + 1}` : String(rId); %>
+                <div class="room-cell" data-room="<%= rId %>" onclick="selectRoom(<%= rId %>)">
+                  <%= rLabel %>
+                </div>
+              <% } %>
+            </div>
+          <% } else { %>
+            <div class="room-grid" id="roomGrid" data-per-floor="<%= roomsPerFloor %>">
+              <p class="text-muted small w-100 text-center py-3">
+                <i class="bi bi-arrow-up"></i> <%= t('floorLabel') %>
+              </p>
+            </div>
+          <% } %>
           <input type="hidden" name="room" id="selectedRoom" value="">
         </div>
 
@@ -69,10 +82,6 @@
       </form>
 
     </div><!-- /.lp-card -->
-
-    <% if (user && user.role === 'floor_speaker') { %>
-    <script>document.addEventListener('DOMContentLoaded', () => selectFloor(<%= user.floor_id %>));</script>
-    <% } %>
 
     <!-- WebMeister360 credit -->
     <div class="lp-wm-credit">

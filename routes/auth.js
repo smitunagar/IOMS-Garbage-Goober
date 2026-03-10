@@ -158,12 +158,14 @@ router.get('/onboarding', async (req, res) => {
   if (!req.session.userId) return res.redirect('/login');
   const user = await db().queryOne('SELECT * FROM users WHERE id = $1', [req.session.userId]);
   if (user && user.is_onboarded) return res.redirect('/home');
+  const lockedFloor = (user && user.role === 'floor_speaker') ? user.floor_id : null;
   res.render('auth/onboarding', {
     layout: 'layout',
     pageTitle: 'Onboarding',
     totalFloors: TOTAL_FLOORS,
     roomsPerFloor: ROOMS_PER_FLOOR,
     user,
+    lockedFloor,
   });
 });
 
