@@ -184,7 +184,13 @@
   "holidayRemovedSuccess": "\u2705 Urlaubszeitraum entfernt. Zuk\u00fcnftiger Plan neu berechnet.",
   "confirmRemoveHoliday": "Diesen Urlaubszeitraum entfernen?",
 
-  "overrideCurrentWeekOnly": "Override gilt nur f\u00fcr die aktuelle Woche und umgeht die Wochensperre.",
+  "overrideCurrentWeekOnly": "Override gilt nur für die aktuelle Woche und umgeht die Wochensperre.",
+  "overrideHolidayRoomsDisabled": "Ausgegrauté Zimmer sind diese Woche im Urlaub und können keinen Dienst erhalten.",
+
+  "activeHolidaysTitle": "Diese Woche im Urlaub",
+  "activeHolidaysEmpty": "Kein Zimmer ist diese Woche im Urlaub.",
+  "activeHolidaysHint": "Diese Zimmer werden automatisch übersprungen und in die Warteschlange eingereiht.",
+  "onHolidayUntil": "Im Urlaub bis {date}",
 
   "registerAsFloorSpeaker": "Als Etagensprecher registrieren",
   "floorSpeakerCodeLabel": "Etagensprecher-Code",

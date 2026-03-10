@@ -48,6 +48,80 @@
   <% } %>
 </div>
 
+<!-- ── Active holidays this week ──────────────────────────────────────── -->
+<div class="stat-card mb-3 <%= activeHolidays.length > 0 ? 'border border-warning border-opacity-50' : '' %>">
+  <h6 class="fw-semibold mb-2">
+    <i class="bi bi-calendar-x me-1 text-warning"></i>
+    <%= t('activeHolidaysTitle') %>
+    <% if (activeHolidays.length > 0) { %>
+      <span class="badge bg-warning text-dark ms-1"><%= activeHolidays.length %></span>
+    <% } %>
+  </h6>
+  <% if (activeHolidays.length === 0) { %>
+    <p class="text-muted small mb-0">
+      <i class="bi bi-check-circle me-1 text-success"></i><%= t('activeHolidaysEmpty') %>
+    </p>
+  <% } else { %>
+    <div class="d-flex flex-column gap-2 mb-2">
+      <% activeHolidays.forEach(h => { %>
+        <div class="d-flex align-items-start gap-2 p-2 rounded"
+             style="background: rgba(255,193,7,0.10); border-left: 3px solid #ffc107;">
+          <i class="bi bi-person-x text-warning mt-1"></i>
+          <div>
+            <span class="fw-bold"><%= C.roomLabel(h.room_number) %></span>
+            <span class="text-muted small ms-2">
+              <i class="bi bi-calendar2-range me-1"></i><%= h.start_date %> &ndash; <%= h.end_date %>
+            </span>
+            <% if (h.note) { %>
+              <span class="text-muted small ms-2">· <%= h.note %></span>
+            <% } %>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+    <p class="text-muted small mb-0">
+      <i class="bi bi-info-circle me-1"></i><%= t('activeHolidaysHint') %>
+    </p>
+  <% } %>
+</div>
+
+<!-- ── On holiday this week ──────────────────────────────────────────────── -->
+<div class="stat-card mb-3 <%= activeHolidays.length > 0 ? 'border border-warning border-opacity-50' : '' %>">
+  <h6 class="fw-semibold mb-2">
+    <i class="bi bi-calendar-x me-1 text-warning"></i>
+    <%= t('activeHolidaysTitle') %>
+    <% if (activeHolidays.length > 0) { %>
+      <span class="badge bg-warning text-dark ms-1"><%= activeHolidays.length %></span>
+    <% } %>
+  </h6>
+  <% if (activeHolidays.length === 0) { %>
+    <p class="text-muted small mb-0">
+      <i class="bi bi-check-circle me-1 text-success"></i><%= t('activeHolidaysEmpty') %>
+    </p>
+  <% } else { %>
+    <div class="d-flex flex-column gap-2 mb-2">
+      <% activeHolidays.forEach(h => { %>
+        <div class="d-flex align-items-start gap-2 p-2 rounded"
+             style="background: rgba(255,193,7,0.10); border-left: 3px solid #ffc107;">
+          <i class="bi bi-person-x text-warning mt-1 flex-shrink-0"></i>
+          <div>
+            <span class="fw-bold"><%= C.roomLabel(h.room_number) %></span>
+            <span class="text-muted small ms-2">
+              <i class="bi bi-calendar2-range me-1"></i><%= h.start_date %> &ndash; <%= h.end_date %>
+            </span>
+            <% if (h.note) { %>
+              <span class="text-muted small ms-2">&middot; <%= h.note %></span>
+            <% } %>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+    <p class="text-muted small mb-0">
+      <i class="bi bi-info-circle me-1"></i><%= t('activeHolidaysHint') %>
+    </p>
+  <% } %>
+</div>
+
 <!-- ── Pending queue ────────────────────────────────────────────────────── -->
 <div class="stat-card mb-3">
   <div class="d-flex align-items-center justify-content-between mb-3">
@@ -179,12 +253,20 @@
     <select name="overrideRoom" class="form-select">
       <option value=""><%= t('noOverrideAutoRotation') %></option>
       <% activeRooms.forEach(r => { %>
-        <option value="<%= r %>">Room <%= C.roomLabel(r) %></option>
+        <% const hol = activeHolidays.find(h => h.room_number === r); %>
+        <option value="<%= r %>" <%= hol ? 'disabled' : '' %>>
+          <%= C.roomLabel(r) %><% if (hol) { %> – <%= t('onHolidayUntil', { date: hol.end_date }) %><% } %>
+        </option>
       <% }); %>
     </select>
     <div class="form-text text-warning small mt-1">
       <i class="bi bi-exclamation-triangle me-1"></i><%= t('overrideCurrentWeekOnly') %>
     </div>
+    <% if (activeHolidays.length > 0) { %>
+      <div class="form-text text-muted small mt-1">
+        <i class="bi bi-calendar-x me-1"></i><%= t('overrideHolidayRoomsDisabled') %>
+      </div>
+    <% } %>
   </div>
 
   <button type="submit" class="btn btn-primary w-100 mb-4">

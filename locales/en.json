@@ -185,6 +185,12 @@
   "confirmRemoveHoliday": "Remove this holiday period?",
 
   "overrideCurrentWeekOnly": "Override applies to the current week only and bypasses the week-lock.",
+  "overrideHolidayRoomsDisabled": "Greyed-out rooms are on holiday this week and cannot be assigned duty.",
+
+  "activeHolidaysTitle": "On holiday this week",
+  "activeHolidaysEmpty": "No rooms are on holiday this week.",
+  "activeHolidaysHint": "These rooms will be skipped and added to the pending queue automatically.",
+  "onHolidayUntil": "On holiday until {date}",
 
   "registerAsFloorSpeaker": "Register as Floor Speaker",
   "floorSpeakerCodeLabel": "Floor Speaker Code",

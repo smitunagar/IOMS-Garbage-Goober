@@ -5,7 +5,7 @@ const { requireAuth, requireOnboarded, requireFloorSpeaker, requireFloorAccess }
 const { TOTAL_FLOORS } = require('../utils/constants');
 const {
   getDutyForWeek, adminOverrideDuty, invalidateFutureSchedule,
-  getWeekStart, getWeekStartStr, weekRangeLabel, fmtDate,
+  getWeekStart, getWeekStartStr, weekStartToEndStr, weekRangeLabel, fmtDate,
 } = require('../utils/rotation');
 
 const router = express.Router();
@@ -43,6 +43,14 @@ router.get('/rotation/:floorId', requireAuth, requireOnboarded, requireFloorSpea
     [floorId]
   );
 
+  // Holidays that overlap the current week (active right now)
+  const weekEndStr = weekStartToEndStr(currentWeekStart);
+  const activeHolidays = await db().query(
+    'SELECT * FROM room_holidays WHERE floor_id = $1 AND start_date <= $2 AND end_date >= $3 ORDER BY room_number ASC',
+    [floorId, weekEndStr, currentWeekStart]
+  );
+  const holidayRoomNumbers = activeHolidays.map(h => h.room_number);
+
   res.render('floor_speaker/rotation', {
     layout: 'layout',
     pageTitle: t('rotationScreenTitle', { floor: floorId }),
@@ -54,6 +62,8 @@ router.get('/rotation/:floorId', requireAuth, requireOnboarded, requireFloorSpea
     activeRooms,
     holidays,
     pendingQueue,
+    activeHolidays,
+    holidayRoomNumbers,
     currentWeekStart,
     fmtDate,
   });
