@@ -18,6 +18,10 @@
       <div class="sidebar-user-name"><%= user.name %></div>
       <div class="sidebar-user-room">
         <% if (user.role === 'floor_speaker') { %>
+          <i class="bi bi-door-open me-1"></i><%= C.roomLabel(user.room_id) %>
+          &nbsp;·&nbsp;
+          <i class="bi bi-building me-1"></i><%= t('floorChipLabel', { floor: user.floor_id }) %>
+          &nbsp;·&nbsp;
           <i class="bi bi-person-badge me-1"></i><%= t('floorSpeakerLabel', { floor: user.managed_floor_id }) %>
         <% } else { %>
           <i class="bi bi-door-open me-1"></i><%= C.roomLabel(user.room_id) %>
