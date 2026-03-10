@@ -3,7 +3,7 @@
    ─────────────────────────────────────────────────────────────────────────── */
 'use strict';
 
-const CACHE_NAME = 'gg-shell-v1';
+const CACHE_NAME = 'gg-shell-v2';
 
 // Static assets to pre-cache (app shell)
 const SHELL_ASSETS = [

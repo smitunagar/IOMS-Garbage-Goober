@@ -1,7 +1,7 @@
 module.exports = {
   BUILDING_NAME: 'GWG Reutlingen',
   TOTAL_FLOORS: 7,
-  ROOMS_PER_FLOOR: 16,
+  ROOMS_PER_FLOOR: 18, // Max room index per floor (rooms 1-18; X09 & X11 are merged, giving 16 active rooms)
   MAX_BIN_ALERTS_PER_DAY: 5,
 
   BIN_TYPES: {
