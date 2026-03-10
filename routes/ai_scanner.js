@@ -175,12 +175,13 @@ router.post('/scan-waste', requireAuth, upload.single('image'), async (req, res)
   const mime   = req.file.mimetype || 'image/jpeg';
 
   const prompt =
-    'You are a waste item identification assistant. ' +
-    'Given this image of a waste item, identify it and respond ONLY with valid JSON ' +
-    '(no markdown, no extra text) in this exact format:\n' +
-    '{"item_name":"<concise name in English>","description":"<one sentence about material/type>",' +
-    '"material_hints":["<material1>","<material2>"]}\n' +
-    'Focus on the primary waste item. Be specific about materials (e.g. "plastic bottle", not just "bottle").';
+    'You are a waste sorting assistant. ' +
+    'Look at the image and identify ALL distinct waste items visible (e.g. food, tissue, packaging, etc.). ' +
+    'Respond ONLY with valid JSON (no markdown, no extra text) in this exact format:\n' +
+    '{"items":[{"item_name":"<concise English name>","description":"<one sentence about material/type>",' +
+    '"material_hints":["<material1>","<material2>"]}]}\n' +
+    'List each visually distinct waste item separately. Maximum 5 items. ' +
+    'Be specific about materials (e.g. "plastic bottle", not just "bottle").';
 
   let aiResult;
   try {
@@ -189,7 +190,6 @@ router.post('/scan-waste', requireAuth, upload.single('image'), async (req, res)
       { inlineData: { mimeType: mime, data: base64 } },
     ]);
     const raw = result.response.text().trim();
-    // Extract JSON object from anywhere in the response (handles markdown fences)
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error('No JSON object in response: ' + raw.slice(0, 200));
     aiResult = JSON.parse(jsonMatch[0]);
@@ -198,21 +198,28 @@ router.post('/scan-waste', requireAuth, upload.single('image'), async (req, res)
     return res.status(500).json({ ok: false, error: 'Could not analyse the image. Please try again.' });
   }
 
-  const {
-    item_name      = 'Unknown item',
-    description    = '',
-    material_hints = [],
-  } = aiResult;
+  // Normalise — support both old single-item and new multi-item format
+  let items = [];
+  if (Array.isArray(aiResult.items)) {
+    items = aiResult.items;
+  } else if (aiResult.item_name) {
+    items = [{ item_name: aiResult.item_name, description: aiResult.description || '', material_hints: aiResult.material_hints || [] }];
+  }
+  if (!items.length) {
+    return res.status(500).json({ ok: false, error: 'Could not identify any waste items in the image.' });
+  }
 
-  const { primary } = mapToBin(item_name, description, material_hints);
-
-  res.json({
-    ok: true,
-    item_name,
-    description,
-    recommended_bin: primary,
-    bin_meta:        BIN_META[primary],
+  const results = items.map(({ item_name = 'Unknown item', description = '', material_hints = [] }) => {
+    const { primary } = mapToBin(item_name, description, material_hints);
+    return {
+      item_name,
+      description,
+      recommended_bin: primary,
+      bin_meta: BIN_META[primary],
+    };
   });
+
+  res.json({ ok: true, items: results });
 });
 
 module.exports = router;

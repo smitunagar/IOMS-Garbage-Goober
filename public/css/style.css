@@ -1023,7 +1023,26 @@
 }
 .wsc-tip i { flex-shrink: 0; margin-top: 2px; }
 
-/* ── Scan again button ──────────────────────────────────────────────────── */
+/* ── Multi-item results ──────────────────────────────────────────────────── */
+.wsc-multi-note {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #555;
+  background: #f0f4f0;
+  border: 1px solid #d0ddd0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.wsc-item-card {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+
 .wsc-scan-again-btn {
   background: #f3f4f6;
   color: #444;
