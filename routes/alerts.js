@@ -4,6 +4,7 @@ const { requireAuth, requireOnboarded } = require('../middleware/auth');
 const { BIN_TYPES, MAX_BIN_ALERTS_PER_DAY } = require('../utils/constants');
 const { getDutyForWeek, getWeekStartStr } = require('../utils/rotation');
 const { sendBinAlertEmail } = require('../utils/mailer');
+const { sendPushToUsers }   = require('../utils/push');
 
 const router = express.Router();
 
@@ -81,6 +82,13 @@ router.post('/report', requireAuth, requireOnboarded, async (req, res) => {
           floor:        user.floor_id,
           note:         note || null,
         }).catch(err => console.error('[Mailer] sendBinAlertEmail failed:', err));
+
+        // Push notification to duty person
+        sendPushToUsers(db(), [dutyUser.id], {
+          title: `⚠️ Bin Full – Floor ${user.floor_id}`,
+          body:  `${BIN_TYPES[binType].emoji} ${BIN_TYPES[binType].label_de} bin reported full by ${user.name}.`,
+          url:   '/home',
+        }).catch(() => {});
       }
     }
   } catch (err) {

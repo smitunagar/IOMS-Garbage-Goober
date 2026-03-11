@@ -274,5 +274,7 @@
   "adminStatStudents": "Students",
   "adminStatFloorSpeakers": "Floor Speakers",
   "adminStatSuspended": "Restricted",
-  "adminFloorsHeading": "Floors this week"
+  "adminFloorsHeading": "Floors this week",
+  "notificationsOn": "Notifications on",
+  "notificationsOff": "Notifications off"
 }

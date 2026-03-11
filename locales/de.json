@@ -274,5 +274,7 @@
   "adminStatStudents": "Studenten",
   "adminStatFloorSpeakers": "Etagensprecher",
   "adminStatSuspended": "Gesperrt",
-  "adminFloorsHeading": "Etagen diese Woche"
+  "adminFloorsHeading": "Etagen diese Woche",
+  "notificationsOn": "Benachrichtigungen an",
+  "notificationsOff": "Benachrichtigungen aus"
 }

@@ -244,3 +244,101 @@ function toggleRoomActiveFS(roomNum, floorId) {
     if (data.ok) location.reload();
   });
 }
+
+/* ── Push Notifications ────────────────────────────────────────────────────────── */
+async function initPushNotifications() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg      = await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    _updatePushBell(!!existing);
+    if (existing) {
+      // Re-sync subscription with server on each load (handles re-login)
+      fetch('/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription: existing }),
+      }).catch(() => {});
+    }
+  } catch (_) {}
+}
+
+async function togglePushNotifications() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    alert('Push notifications are not supported in this browser.');
+    return;
+  }
+  const btn = document.getElementById('pushBellBtn');
+  if (btn) btn.disabled = true;
+
+  try {
+    const reg      = await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+
+    if (existing) {
+      // ── Unsubscribe
+      await fetch('/push/unsubscribe', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: existing.endpoint }),
+      });
+      await existing.unsubscribe();
+      _updatePushBell(false);
+    } else {
+      // ── Subscribe
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') { if (btn) btn.disabled = false; return; }
+
+      const resp = await fetch('/push/vapid-public-key');
+      const { key } = await resp.json();
+      if (!key) { if (btn) btn.disabled = false; return; }
+
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: _urlB64ToUint8(key),
+      });
+      await fetch('/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription: sub }),
+      });
+      _updatePushBell(true);
+    }
+  } catch (err) {
+    console.error('[Push]', err);
+  }
+  if (btn) btn.disabled = false;
+}
+
+function _updatePushBell(isOn) {
+  const btn  = document.getElementById('pushBellBtn');
+  const icon = document.getElementById('pushBellIcon');
+  const lbl  = document.getElementById('pushBellLabel');
+  if (!btn) return;
+  if (icon) icon.className = isOn ? 'bi bi-bell-fill' : 'bi bi-bell-slash';
+  if (lbl)  lbl.textContent = isOn ? (lbl.dataset.on || 'Notifications on') : (lbl.dataset.off || 'Notifications off');
+  btn.title = isOn ? 'Click to disable notifications' : 'Click to enable notifications';
+}
+
+function _urlB64ToUint8(b64) {
+  const pad  = '='.repeat((4 - b64.length % 4) % 4);
+  const raw  = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  const arr  = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
+// ── iOS WKWebView APNs bridge ───────────────────────────────────────────
+window._registerApnsToken = function(token) {
+  fetch('/push/register-apns', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token }),
+  }).then(r => r.json()).then(d => {
+    if (d.ok) console.log('[APNs] Token registered');
+  }).catch(() => {});
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (document.getElementById('pushBellBtn')) initPushNotifications();
+});

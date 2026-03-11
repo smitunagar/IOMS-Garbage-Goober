@@ -1,5 +1,11 @@
 {
   "version": 2,
+  "crons": [
+    {
+      "path": "/push/weekly-duty-reminder",
+      "schedule": "0 8 * * 1"
+    }
+  ],
   "functions": {
     "server.js": {
       "maxDuration": 30,

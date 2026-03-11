@@ -128,6 +128,18 @@ async function initDatabase() {
       created_at       TIMESTAMPTZ DEFAULT NOW(),
       UNIQUE(floor_id, week_start)
     );
+
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id                SERIAL PRIMARY KEY,
+      user_id           INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      floor_id          INTEGER,
+      platform          TEXT NOT NULL DEFAULT 'web',
+      endpoint          TEXT UNIQUE NOT NULL,
+      subscription_data TEXT,
+      apns_token        TEXT,
+      created_at        TIMESTAMPTZ DEFAULT NOW(),
+      updated_at        TIMESTAMPTZ DEFAULT NOW()
+    );
   `);
 
   // ── Schema migrations (add new columns if they don't exist) ──────────────

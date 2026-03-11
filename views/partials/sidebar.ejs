@@ -92,8 +92,12 @@
               class="sidebar-lang-btn <%= lang === 'de' ? 'active' : '' %>">🇩🇪 DE</button>
       <button name="language" value="en"
               class="sidebar-lang-btn <%= lang === 'en' ? 'active' : '' %>">🇬🇧 EN</button>
-    </form>
-    <a class="sidebar-logout" href="/logout">
+    </form>    <button id="pushBellBtn" class="sidebar-push-btn" onclick="togglePushNotifications()" title="Enable notifications">
+      <i id="pushBellIcon" class="bi bi-bell-slash sidebar-link-icon"></i>
+      <span id="pushBellLabel" data-on="<%= t('notificationsOn') %>" data-off="<%= t('notificationsOff') %>">
+        <%= t('notificationsOff') %>
+      </span>
+    </button>    <a class="sidebar-logout" href="/logout">
       <i class="bi bi-box-arrow-left me-2"></i><%= t('logoutButton') %>
     </a>
     <% if (user && !user.is_admin) { %>
