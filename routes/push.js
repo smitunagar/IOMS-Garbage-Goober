@@ -12,7 +12,7 @@ const express  = require('express');
 const router   = express.Router();
 const db       = require('../config/database').getDb;
 const { requireAuth, requireOnboarded } = require('../middleware/auth');
-const { sendPushToUsers, sendPushToAll } = require('../utils/push');
+const { sendPushToUsers, sendPushToUsersDetailed, sendPushToAll } = require('../utils/push');
 const { getDutyForWeek, getWeekStartStr } = require('../utils/rotation');
 const { TOTAL_FLOORS, roomLabel }         = require('../utils/constants');
 
@@ -99,6 +99,38 @@ router.get('/weekly-duty-reminder', async (req, res) => {
   }
 
   res.json({ ok: true, sent });
+});
+
+// ── POST /push/test-room/:roomId (diagnostic, CRON_SECRET protected) ───────
+router.post('/test-room/:roomId', async (req, res) => {
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret) {
+    const auth = req.headers['authorization'];
+    if (auth !== `Bearer ${cronSecret}`) return res.status(401).json({ ok: false });
+  }
+
+  const roomId = parseInt(req.params.roomId, 10);
+  if (!roomId) return res.status(400).json({ ok: false, error: 'Invalid room ID' });
+
+  const targetUser = await db().queryOne(
+    'SELECT id, name, floor_id, room_id FROM users WHERE room_id = $1 AND is_onboarded = 1 ORDER BY id LIMIT 1',
+    [roomId]
+  );
+  if (!targetUser) return res.status(404).json({ ok: false, error: 'No onboarded user found' });
+
+  const { title, body, url } = req.body || {};
+  const results = await sendPushToUsersDetailed(db(), [targetUser.id], {
+    title: title || '🔎 Push Diagnostic',
+    body: body || `Diagnostic notification for room ${roomId}`,
+    url: url || '/home',
+  });
+
+  res.json({
+    ok: true,
+    targetUser,
+    apnsSandbox: process.env.APNS_SANDBOX === 'true',
+    results,
+  });
 });
 
 // ── POST /push/broadcast (Admin only) ────────────────────────────────────────

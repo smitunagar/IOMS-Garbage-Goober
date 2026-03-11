@@ -59,7 +59,7 @@ function _apnsJwt() {
 function _sendApns(deviceToken, title, body, url) {
   return new Promise(resolve => {
     const jwt = _apnsJwt();
-    if (!jwt) return resolve('no-config');
+    if (!jwt) return resolve({ status: 'no-config', platform: 'apns' });
 
     const bundleId = process.env.APNS_BUNDLE_ID || 'com.webmeister360.garbagegoober';
     const sandbox  = process.env.APNS_SANDBOX === 'true';
@@ -70,11 +70,11 @@ function _sendApns(deviceToken, title, body, url) {
       client = http2.connect(`https://${host}`);
     } catch (e) {
       console.error('[Push] APNs connect error:', e.message);
-      return resolve('error');
+      return resolve({ status: 'error', platform: 'apns', host, reason: e.message });
     }
     client.on('error', err => {
       console.error('[Push] APNs client error:', err.message);
-      resolve('error');
+      resolve({ status: 'error', platform: 'apns', host, reason: err.message });
     });
 
     const apnsPayload = JSON.stringify({
@@ -94,14 +94,36 @@ function _sendApns(deviceToken, title, body, url) {
     });
 
     let status = 200;
+    let responseBody = '';
     req.on('response', headers => { status = headers[':status']; });
+    req.on('data', chunk => { responseBody += chunk; });
     req.write(apnsPayload);
     req.end();
     req.on('end', () => {
       client.close();
-      if (status === 200)        return resolve('ok');
-      if (status === 410 || status === 400) return resolve('expired');
-      resolve('error');
+      let parsedBody = null;
+      try { parsedBody = responseBody ? JSON.parse(responseBody) : null; } catch (_) {}
+      if (status === 200) {
+        return resolve({ status: 'ok', platform: 'apns', host, tokenPreview: deviceToken.slice(0, 12) });
+      }
+      if (status === 410 || status === 400) {
+        return resolve({
+          status: 'expired',
+          platform: 'apns',
+          host,
+          tokenPreview: deviceToken.slice(0, 12),
+          reason: parsedBody?.reason || null,
+          apnsStatus: status,
+        });
+      }
+      resolve({
+        status: 'error',
+        platform: 'apns',
+        host,
+        tokenPreview: deviceToken.slice(0, 12),
+        reason: parsedBody?.reason || null,
+        apnsStatus: status,
+      });
     });
   });
 }
@@ -115,6 +137,16 @@ async function sendPushToUsers(db, userIds, { title, body, url = '/home' }) {
     [userIds]
   );
   await _dispatchAll(db, subs, title, body, url);
+}
+
+async function sendPushToUsersDetailed(db, userIds, { title, body, url = '/home' }) {
+  if (!userIds || !userIds.length) return [];
+  const subs = await db.query(
+    `SELECT id, subscription_data, platform, apns_token
+     FROM push_subscriptions WHERE user_id = ANY($1::int[])`,
+    [userIds]
+  );
+  return _dispatchAll(db, subs, title, body, url, { collectResults: true });
 }
 
 // ── Public: send push to all users on a floor ─────────────────────────────────
@@ -137,20 +169,25 @@ async function sendPushToAll(db, { title, body, url = '/home' }) {
 }
 
 // ── Internal: dispatch + clean up expired subscriptions ──────────────────────
-async function _dispatchAll(db, subs, title, body, url) {
+async function _dispatchAll(db, subs, title, body, url, options = {}) {
   const expired = [];
+  const results = [];
   for (const s of subs) {
     let result;
     if (s.platform === 'apns') {
       result = await _sendApns(s.apns_token, title, body, url);
     } else {
       try {
-        result = await _sendWebPush(JSON.parse(s.subscription_data), title, body, url);
+        const webResult = await _sendWebPush(JSON.parse(s.subscription_data), title, body, url);
+        result = { status: webResult, platform: 'web' };
       } catch (_) {
-        result = 'error';
+        result = { status: 'error', platform: 'web' };
       }
     }
-    if (result === 'expired') expired.push(s.id);
+    if (result.status === 'expired') expired.push(s.id);
+    if (options.collectResults) {
+      results.push({ subscriptionId: s.id, ...result });
+    }
   }
   if (expired.length) {
     await db.run(
@@ -158,6 +195,7 @@ async function _dispatchAll(db, subs, title, body, url) {
       [expired]
     );
   }
+  return results;
 }
 
-module.exports = { sendPushToUsers, sendPushToFloor, sendPushToAll };
+module.exports = { sendPushToUsers, sendPushToUsersDetailed, sendPushToFloor, sendPushToAll };
