@@ -33,15 +33,15 @@
 
         <!-- Photo -->
         <% if (e.photoPaths && e.photoPaths.length > 0) { %>
-          <a href="<%= e.photoPaths[0] %>" target="_blank" rel="noopener" class="disposal-feed-photo-link">
+          <button type="button" class="disposal-feed-photo-link js-feed-preview-trigger" data-image-url="<%= e.photoPaths[0] %>" data-image-alt="Disposal photo">
             <img src="<%= e.photoPaths[0] %>" alt="Disposal photo" class="disposal-feed-photo" loading="lazy">
-          </a>
+          </button>
           <% if (e.photoPaths.length > 1) { %>
           <div class="disposal-feed-extra-photos">
             <% e.photoPaths.slice(1).forEach(url => { %>
-              <a href="<%= url %>" target="_blank" rel="noopener">
+              <button type="button" class="disposal-feed-thumb-btn js-feed-preview-trigger" data-image-url="<%= url %>" data-image-alt="Disposal photo thumbnail">
                 <img src="<%= url %>" alt="" class="disposal-feed-thumb" loading="lazy">
-              </a>
+              </button>
             <% }); %>
           </div>
           <% } %>
@@ -120,6 +120,16 @@
 
 <% } %>
 
+<div class="disposal-feed-preview" id="disposalFeedPreview" hidden aria-hidden="true">
+  <div class="disposal-feed-preview-backdrop" data-feed-preview-close></div>
+  <div class="disposal-feed-preview-dialog" role="dialog" aria-modal="true" aria-label="Disposal image preview">
+    <button type="button" class="disposal-feed-preview-close" aria-label="Close image preview" data-feed-preview-close>
+      <i class="bi bi-x-lg"></i>
+    </button>
+    <img id="disposalFeedPreviewImage" src="" alt="Disposal preview" class="disposal-feed-preview-image">
+  </div>
+</div>
+
 
 <!-- ════════════════════════════════════════════════════════
      Disposal Feed CSS (scoped)
@@ -145,12 +155,19 @@
 }
 
 /* Photo */
-.disposal-feed-photo-link { display: block; }
+.disposal-feed-photo-link {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
 .disposal-feed-photo {
   width: 100%;
   height: 180px;
   object-fit: cover;
   display: block;
+  cursor: zoom-in;
 }
 .disposal-feed-photo-placeholder {
   width: 100%;
@@ -168,12 +185,18 @@
   padding: 4px 6px;
   background: #f0f0f0;
 }
+.disposal-feed-thumb-btn {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
 .disposal-feed-thumb {
   width: 56px;
   height: 56px;
   object-fit: cover;
   border-radius: 6px;
   border: 2px solid #fff;
+  cursor: zoom-in;
 }
 
 /* Bin chips overlaid on photo */
@@ -250,6 +273,60 @@
   margin-top: 0.4rem;
 }
 
+.disposal-feed-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.disposal-feed-preview[hidden] {
+  display: none;
+}
+
+.disposal-feed-preview-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+}
+
+.disposal-feed-preview-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(96vw, 900px);
+  max-height: 92vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.disposal-feed-preview-image {
+  max-width: 100%;
+  max-height: 92vh;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+.disposal-feed-preview-close {
+  position: absolute;
+  top: -0.75rem;
+  right: -0.25rem;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
 @media (max-width: 480px) {
   .disposal-feed-grid {
     grid-template-columns: 1fr 1fr;
@@ -259,5 +336,55 @@
   .disposal-feed-photo-placeholder {
     height: 130px;
   }
+
+  .disposal-feed-preview {
+    padding: 0.75rem;
+  }
+
+  .disposal-feed-preview-dialog {
+    width: 100%;
+  }
+
+  .disposal-feed-preview-close {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
 }
 </style>
+
+<script>
+(() => {
+  const preview = document.getElementById('disposalFeedPreview');
+  const previewImage = document.getElementById('disposalFeedPreviewImage');
+  if (!preview || !previewImage) return;
+
+  const openPreview = (url, alt) => {
+    previewImage.src = url;
+    previewImage.alt = alt || 'Disposal preview';
+    preview.hidden = false;
+    preview.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closePreview = () => {
+    preview.hidden = true;
+    preview.setAttribute('aria-hidden', 'true');
+    previewImage.src = '';
+    document.body.style.overflow = '';
+  };
+
+  document.querySelectorAll('.js-feed-preview-trigger').forEach(trigger => {
+    trigger.addEventListener('click', () => {
+      openPreview(trigger.dataset.imageUrl, trigger.dataset.imageAlt);
+    });
+  });
+
+  preview.querySelectorAll('[data-feed-preview-close]').forEach(element => {
+    element.addEventListener('click', closePreview);
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !preview.hidden) closePreview();
+  });
+})();
+</script>
