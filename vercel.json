@@ -6,17 +6,13 @@
       "schedule": "0 8 * * 1"
     }
   ],
-  "functions": {
-    "server.js": {
-      "maxDuration": 30,
-      "memory": 512
-    }
-  },
   "builds": [
     {
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
+        "maxDuration": 30,
+        "memory": 512,
         "includeFiles": [
           "views/**",
           "public/**",
