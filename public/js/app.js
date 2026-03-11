@@ -246,7 +246,22 @@ function toggleRoomActiveFS(roomNum, floorId) {
 }
 
 /* ── Push Notifications ────────────────────────────────────────────────────────── */
+function _isNativeIosApp() {
+  return !!(window.__GG_NATIVE_IOS_APP__ || window.webkit?.messageHandlers?.nativePush);
+}
+
+function _setNativePushState(hasToken, token) {
+  window.__GG_NATIVE_IOS_APP__ = true;
+  window.__GG_HAS_APNS_TOKEN__ = !!hasToken;
+  window.__GG_APNS_TOKEN__ = token || null;
+  _updatePushBell(!!hasToken);
+}
+
 async function initPushNotifications() {
+  if (_isNativeIosApp()) {
+    _updatePushBell(!!window.__GG_HAS_APNS_TOKEN__);
+    return;
+  }
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
   try {
     const reg      = await navigator.serviceWorker.ready;
@@ -264,6 +279,28 @@ async function initPushNotifications() {
 }
 
 async function togglePushNotifications() {
+  if (_isNativeIosApp()) {
+    const btn = document.getElementById('pushBellBtn');
+    if (btn) btn.disabled = true;
+
+    try {
+      if (window.__GG_HAS_APNS_TOKEN__ && window.__GG_APNS_TOKEN__) {
+        await fetch('/push/unsubscribe', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        _setNativePushState(false, null);
+      } else {
+        window.webkit?.messageHandlers?.nativePush?.postMessage({ action: 'requestPermission' });
+      }
+    } catch (err) {
+      console.error('[Push]', err);
+    }
+
+    if (btn) btn.disabled = false;
+    return;
+  }
+
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     alert('Push notifications are not supported in this browser.');
     return;
@@ -315,6 +352,7 @@ function _updatePushBell(isOn) {
   const icon = document.getElementById('pushBellIcon');
   const lbl  = document.getElementById('pushBellLabel');
   if (!btn) return;
+  btn.dataset.enabled = isOn ? 'true' : 'false';
   if (icon) icon.className = isOn ? 'bi bi-bell-fill' : 'bi bi-bell-slash';
   if (lbl)  lbl.textContent = isOn ? (lbl.dataset.on || 'Notifications on') : (lbl.dataset.off || 'Notifications off');
   btn.title = isOn ? 'Click to disable notifications' : 'Click to enable notifications';
@@ -335,8 +373,15 @@ window._registerApnsToken = function(token) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token }),
   }).then(r => r.json()).then(d => {
-    if (d.ok) console.log('[APNs] Token registered');
+    if (d.ok) {
+      _setNativePushState(true, token);
+      console.log('[APNs] Token registered');
+    }
   }).catch(() => {});
+};
+
+window._nativePushDenied = function() {
+  alert('Please enable notifications for Garbage Goober in iPhone Settings.');
 };
 
 document.addEventListener('DOMContentLoaded', () => {
