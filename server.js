@@ -26,6 +26,19 @@ app.use(expressLayouts);
 app.use(express.urlencoded({ extended: true, limit: '6mb' }));
 app.use(express.json({ limit: '6mb' }));
 
+// ── Service Worker: inject DEPLOY_ID so cache auto-busts on every deploy ────
+// Vercel sets VERCEL_GIT_COMMIT_SHA on every deploy; falls back to startup time.
+const fs = require('fs');
+const SW_DEPLOY_ID = (process.env.VERCEL_GIT_COMMIT_SHA || '').slice(0, 8) || Date.now().toString(36);
+const _swSource = fs.readFileSync(path.join(__dirname, 'public', 'sw.js'), 'utf8');
+const _swContent = _swSource.replace('__DEPLOY_ID__', SW_DEPLOY_ID);
+app.get('/sw.js', (_req, res) => {
+  // no-store so the browser always re-fetches and notices a new SW version
+  res.setHeader('Content-Type', 'application/javascript');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.send(_swContent);
+});
+
 // ── Static files ─────────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 

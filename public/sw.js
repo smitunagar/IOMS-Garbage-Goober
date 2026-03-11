@@ -3,7 +3,9 @@
    ─────────────────────────────────────────────────────────────────────────── */
 'use strict';
 
-const CACHE_NAME = 'gg-shell-v2';
+// Cache name contains the deploy ID injected by server.js – changes on every deploy
+// so old caches are automatically deleted when a new version is pushed.
+const CACHE_NAME = 'gg-shell-__DEPLOY_ID__';
 
 // Static assets to pre-cache (app shell)
 const SHELL_ASSETS = [
@@ -43,17 +45,21 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return;
   if (!request.url.startsWith(self.location.origin)) return;
 
-  // Static assets → cache-first
+  // Static assets → stale-while-revalidate
+  // Serve from cache immediately (fast), fetch fresh copy in background,
+  // update the cache entry → next page load always gets the latest version.
   const isStatic = /\.(css|js|png|jpg|jpeg|svg|woff2?|ico)(\?.*)?$/.test(request.url);
   if (isStatic) {
     event.respondWith(
-      caches.match(request).then(cached => cached || fetch(request).then(res => {
-        if (res.ok) {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(request, clone));
-        }
-        return res;
-      }))
+      caches.open(CACHE_NAME).then(async cache => {
+        const cached = await cache.match(request);
+        const networkFetch = fetch(request).then(res => {
+          if (res.ok) cache.put(request, res.clone());
+          return res;
+        }).catch(() => cached);
+        // Return cached instantly; network fetch updates cache in background
+        return cached || networkFetch;
+      })
     );
     return;
   }
