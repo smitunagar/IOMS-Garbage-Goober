@@ -239,11 +239,6 @@ router.post('/account/delete', async (req, res) => {
     return req.session.save(() => res.redirect(req.headers.referer || '/home'));
   }
 
-  if (user.is_admin) {
-    req.session.flash = { error: t('deleteAccountAdminNotAllowed') };
-    return req.session.save(() => res.redirect(req.headers.referer || '/home'));
-  }
-
   try {
     // Delete FK-constrained records first
     await db().run('DELETE FROM disposal_events WHERE user_id = $1', [userId]);

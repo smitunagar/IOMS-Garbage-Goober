@@ -72,7 +72,7 @@
   <%- body %>
 <% } %>
 
-<% if (user && !user.is_admin) { %>
+<% if (user) { %>
 <!-- ── Delete Account Modal (rendered once at body level) ────────────────── -->
 <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
