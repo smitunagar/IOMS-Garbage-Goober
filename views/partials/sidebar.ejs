@@ -59,6 +59,10 @@
       <span class="sidebar-link-icon"><i class="bi bi-airplane-fill"></i></span>
       <span class="sidebar-link-label"><%= t('navHoliday') %></span>
     </a>
+    <a class="sidebar-link <%= path === '/profile' ? 'active' : '' %>" href="/profile">
+      <span class="sidebar-link-icon"><i class="bi bi-person-circle"></i></span>
+      <span class="sidebar-link-label"><%= t('navProfile') %></span>
+    </a>
 
     <% if (user && user.is_admin) { %>
     <div class="sidebar-section-label">Admin</div>

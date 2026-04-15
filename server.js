@@ -101,6 +101,7 @@ app.use('/floor-speaker', require('./routes/floor_speaker'));
 app.use('/api', require('./routes/ai_scanner'));
 app.use('/holidays', require('./routes/holidays'));
 app.use('/push', require('./routes/push'));
+app.use('/profile', require('./routes/profile'));
 
 // PWA offline page
 app.get('/offline', (req, res) => {

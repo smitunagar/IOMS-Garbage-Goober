@@ -277,5 +277,29 @@
   "adminStatSuspended": "Gesperrt",
   "adminFloorsHeading": "Etagen diese Woche",
   "notificationsOn": "Benachrichtigungen an",
-  "notificationsOff": "Benachrichtigungen aus"
+  "notificationsOff": "Benachrichtigungen aus",
+
+  "emailVerificationSentTitle": "Bitte prüfe deine E-Mails",
+  "emailVerificationSentBody": "Wir haben einen Verifizierungslink an {email} geschickt. Klicke darauf, um dein Konto zu aktivieren.",
+  "emailVerificationSuccess": "E-Mail verifiziert! Du kannst dich jetzt einloggen.",
+  "emailVerificationInvalid": "Dieser Verifizierungslink ist ungültig oder abgelaufen.",
+  "emailNotVerifiedError": "Bitte bestätige zuerst deine E-Mail-Adresse. Prüfe deinen Posteingang.",
+  "resendVerificationButton": "Verifizierungsmail erneut senden",
+  "resendVerificationSuccess": "Verifizierungsmail erneut gesendet. Prüfe deinen Posteingang.",
+  "resendVerificationNotFound": "Kein unverfiziertes Konto für diese E-Mail-Adresse gefunden.",
+
+  "sendResetLinkButton": "Zurüksetz-Link senden",
+  "resetPasswordButton": "Neues Passwort setzen",
+  "newPasswordLabel": "Neues Passwort",
+  "resetPasswordInvalid": "Dieser Passwort-Zurücksetzen-Link ist ungültig oder abgelaufen.",
+  "resetPasswordSuccess": "Passwort aktualisiert. Du kannst dich jetzt einloggen.",
+  "resetLinkSentMessage": "Falls diese E-Mail registriert ist, wurde ein Zurücksetzen-Link gesendet.",
+
+  "navProfile": "Mein Profil",
+  "profileTitle": "Mein Profil",
+  "changePasswordTitle": "Passwort ändern",
+  "currentPasswordLabel": "Aktuelles Passwort",
+  "changePasswordButton": "Passwort aktualisieren",
+  "changePasswordSuccess": "Passwort erfolgreich aktualisiert.",
+  "errorCurrentPasswordWrong": "Aktuelles Passwort ist falsch."
 }

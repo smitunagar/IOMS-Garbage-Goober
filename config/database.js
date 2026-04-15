@@ -140,6 +140,15 @@ async function initDatabase() {
       created_at        TIMESTAMPTZ DEFAULT NOW(),
       updated_at        TIMESTAMPTZ DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS email_tokens (
+      id         SERIAL PRIMARY KEY,
+      user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token      TEXT UNIQUE NOT NULL,
+      type       TEXT NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
   `);
 
   // ── Schema migrations (add new columns if they don't exist) ──────────────
@@ -147,6 +156,13 @@ async function initDatabase() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'student';
     ALTER TABLE users ADD COLUMN IF NOT EXISTS managed_floor_id INTEGER;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS is_suspended INTEGER DEFAULT 0;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_email_verified INTEGER DEFAULT 1;
+  `);
+
+  // Index for fast token lookups
+  await p.query(`
+    CREATE INDEX IF NOT EXISTS idx_email_tokens_token ON email_tokens (token);
+    CREATE INDEX IF NOT EXISTS idx_email_tokens_user  ON email_tokens (user_id, type);
   `);
 
   // ── Performance indexes ───────────────────────────────────────────────────

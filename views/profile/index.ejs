@@ -1,0 +1,81 @@
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-7 col-lg-5">
+
+      <!-- ── Profile info card ─────────────────────────────────────────── -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="rounded-circle bg-success text-white d-flex align-items-center
+                        justify-content-center flex-shrink-0"
+                 style="width:52px;height:52px;font-size:1.4rem;font-weight:700">
+              <%= user.name.charAt(0).toUpperCase() %>
+            </div>
+            <div>
+              <div class="fw-semibold fs-5"><%= user.name %></div>
+              <div class="text-muted small"><%= user.email %></div>
+            </div>
+          </div>
+          <hr class="my-2">
+          <div class="d-flex gap-3 text-muted small">
+            <span><i class="bi bi-building me-1"></i><%= t('floorChipLabel', { floor: user.floor_id }) %></span>
+            <span><i class="bi bi-door-open me-1"></i><%= C.roomLabel(user.room_id) %></span>
+            <% if (user.role === 'floor_speaker') { %>
+              <span><i class="bi bi-person-badge me-1"></i><%= t('floorSpeakerLabel', { floor: user.managed_floor_id }) %></span>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Change password card ──────────────────────────────────────── -->
+      <div class="card shadow-sm">
+        <div class="card-header fw-semibold">
+          <i class="bi bi-key-fill me-2 text-success"></i><%= t('changePasswordTitle') %>
+        </div>
+        <div class="card-body">
+
+          <% if (flash && flash.success) { %>
+            <div class="alert alert-success" role="alert">
+              <i class="bi bi-check-circle me-1"></i><%= flash.success %>
+            </div>
+          <% } %>
+          <% if (flash && flash.error) { %>
+            <div class="alert alert-danger" role="alert">
+              <i class="bi bi-exclamation-circle me-1"></i><%= flash.error %>
+            </div>
+          <% } %>
+
+          <form method="POST" action="/profile/change-password">
+            <div class="input-float mb-3">
+              <input type="password" name="currentPassword" id="curPw"
+                     class="form-control" placeholder=" " required autocomplete="current-password">
+              <label for="curPw">
+                <i class="bi bi-lock me-1"></i><%= t('currentPasswordLabel') %>
+              </label>
+            </div>
+            <div class="input-float mb-3">
+              <input type="password" name="newPassword" id="newPw"
+                     class="form-control" placeholder=" " required autocomplete="new-password">
+              <label for="newPw">
+                <i class="bi bi-lock-fill me-1"></i><%= t('newPasswordLabel') %>
+              </label>
+            </div>
+            <div class="input-float mb-2">
+              <input type="password" name="confirmPassword" id="confirmPw"
+                     class="form-control" placeholder=" " required autocomplete="new-password">
+              <label for="confirmPw">
+                <i class="bi bi-lock-fill me-1"></i><%= t('confirmPasswordLabel') %>
+              </label>
+            </div>
+            <p class="text-muted small mb-3"><%= t('passwordHelperMinChars') %></p>
+            <button type="submit" class="btn btn-success w-100">
+              <i class="bi bi-check-lg me-2"></i><%= t('changePasswordButton') %>
+            </button>
+          </form>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

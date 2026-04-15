@@ -277,5 +277,29 @@
   "adminStatSuspended": "Restricted",
   "adminFloorsHeading": "Floors this week",
   "notificationsOn": "Notifications on",
-  "notificationsOff": "Notifications off"
+  "notificationsOff": "Notifications off",
+
+  "emailVerificationSentTitle": "Check your inbox",
+  "emailVerificationSentBody": "We sent a verification link to {email}. Click it to activate your account.",
+  "emailVerificationSuccess": "Email verified! You can now log in.",
+  "emailVerificationInvalid": "This verification link is invalid or has expired.",
+  "emailNotVerifiedError": "Please verify your email first. Check your inbox for a verification link.",
+  "resendVerificationButton": "Resend verification email",
+  "resendVerificationSuccess": "Verification email resent. Check your inbox.",
+  "resendVerificationNotFound": "No unverified account found for that email address.",
+
+  "sendResetLinkButton": "Send reset link",
+  "resetPasswordButton": "Set new password",
+  "newPasswordLabel": "New password",
+  "resetPasswordInvalid": "This password reset link is invalid or has expired.",
+  "resetPasswordSuccess": "Password updated. You can now log in.",
+  "resetLinkSentMessage": "If that email is registered, a reset link has been sent.",
+
+  "navProfile": "My Profile",
+  "profileTitle": "My Profile",
+  "changePasswordTitle": "Change Password",
+  "currentPasswordLabel": "Current password",
+  "changePasswordButton": "Update password",
+  "changePasswordSuccess": "Password updated successfully.",
+  "errorCurrentPasswordWrong": "Current password is incorrect."
 }

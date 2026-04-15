@@ -40,13 +40,16 @@
           </label>
         </div>
 
-        <div class="input-float mb-4">
+        <div class="input-float mb-2">
           <input type="password" name="password" id="loginPw"
                  class="form-control"
                  placeholder=" " required>
           <label for="loginPw">
             <i class="bi bi-lock me-1"></i><%= t('passwordLabel') %>
           </label>
+        </div>
+        <div class="text-end mb-4">
+          <a href="/forgot-password" class="text-muted small"><%= t('forgotPasswordLink') %></a>
         </div>
 
         <button type="submit" class="btn btn-login w-100">
