@@ -113,6 +113,17 @@ app.get('/.well-known/assetlinks.json', (req, res) => {
   res.json(require('./config/assetlinks.json'));
 });
 
+// Apple App Site Association for Universal Links (iOS)
+const aasa = require('./config/apple-app-site-association.json');
+app.get('/.well-known/apple-app-site-association', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.json(aasa);
+});
+app.get('/apple-app-site-association', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.json(aasa);
+});
+
 // Root redirect
 app.get('/', (req, res) => {
   if (res.locals.user) {

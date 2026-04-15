@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "4W54C53K9M.com.webmeister360.garbagegoober",
+        "paths": ["/reset-password*", "/forgot-password*"]
+      }
+    ]
+  }
+}
