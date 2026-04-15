@@ -1,0 +1,21 @@
+name: Keep Server Warm
+
+on:
+  schedule:
+    # Runs every 5 minutes – keeps Vercel function and Neon DB connection alive
+    # so users never hit the cold-start timeout when opening the app.
+    - cron: '*/5 * * * *'
+  workflow_dispatch: {}   # also runnable manually from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Ping keepwarm endpoint
+        run: |
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://ioms-garbage-goober.vercel.app/push/keepwarm")
+          echo "HTTP status: $HTTP"
+          [ "$HTTP" = "200" ] || exit 1
