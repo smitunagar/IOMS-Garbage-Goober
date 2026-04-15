@@ -145,4 +145,23 @@ router.post('/broadcast', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ── GET /push/test-smtp (diagnostic, CRON_SECRET protected) ─────────────────
+router.get('/test-smtp', async (req, res) => {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret || req.headers['authorization'] !== `Bearer ${cronSecret}`) {
+    return res.status(401).json({ ok: false, error: 'Unauthorized' });
+  }
+  const { sendVerificationEmail } = require('../utils/email');
+  try {
+    await sendVerificationEmail(
+      process.env.SMTP_USER,
+      'SMTP Test',
+      'test-token-123'
+    );
+    res.json({ ok: true, message: 'Email sent successfully to ' + process.env.SMTP_USER });
+  } catch (err) {
+    res.json({ ok: false, error: err.message, code: err.code, stack: err.stack });
+  }
+});
+
 module.exports = router;
