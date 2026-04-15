@@ -1,5 +1,77 @@
 /* ── IOMS Individual – Client JS ─────────────────────────────────────────── */
+/* ── Page-transition progress bar ────────────────────────────────────────── */
+(function () {
+  var bar = document.getElementById('gg-pb');
+  if (!bar) return;
 
+  function pbDone() {
+    // Snap to 100% then fade out
+    bar.style.animation = 'none';
+    bar.style.transition = 'width 0.18s ease';
+    bar.style.width = '100%';
+    void bar.offsetWidth; // force reflow
+    bar.style.transition = 'width 0.18s ease, opacity 0.35s ease 0.12s';
+    bar.style.opacity = '0';
+    setTimeout(function () {
+      bar.style.width = '0';
+      bar.style.transition = '';
+      bar.classList.remove('gg-pb-run');
+    }, 600);
+  }
+
+  function pbStart() {
+    bar.style.animation = 'none';
+    bar.style.transition = 'none';
+    bar.style.width = '0';
+    bar.style.opacity = '1';
+    void bar.offsetWidth;
+    bar.classList.add('gg-pb-run');
+  }
+
+  // Complete when DOM is ready (page finished loading)
+  document.addEventListener('DOMContentLoaded', pbDone);
+
+  // Restart on bfcache restore (iOS back/forward swipe)
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) pbDone();
+  });
+
+  // Start bar on same-origin link clicks (excludes anchors, external, mailto)
+  document.addEventListener('click', function (e) {
+    var link = e.target.closest('a[href]');
+    if (!link || link.target === '_blank') return;
+    var href = link.getAttribute('href') || '';
+    if (!href || href.charAt(0) === '#' || href.startsWith('javascript') || href.startsWith('mailto')) return;
+    try {
+      var url = new URL(href, location.href);
+      if (url.origin !== location.origin) return;
+    } catch (err) { return; }
+    pbStart();
+  });
+
+  // Start bar + add spinner to submit button on form submission
+  document.addEventListener('submit', function (e) {
+    var form = e.target;
+    // Skip dialog forms or forms that won't navigate (e.g. language switcher)
+    if (form.dataset.noLoader === 'true') return;
+    pbStart();
+
+    // Disable the submit button and show a spinner so the user knows it's working
+    var btn = form.querySelector('[type="submit"]:not([data-no-loader])');
+    if (btn && !btn.disabled) {
+      var label = btn.textContent.trim();
+      btn.disabled = true;
+      btn.innerHTML =
+        '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>' +
+        label;
+      // Safety re-enable after 30 s in case the server never responds
+      setTimeout(function () {
+        btn.disabled = false;
+        btn.textContent = label;
+      }, 30000);
+    }
+  });
+}());
 // Auto-dismiss alerts after 4 seconds
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.alert-dismissible[data-auto-dismiss]').forEach(el => {

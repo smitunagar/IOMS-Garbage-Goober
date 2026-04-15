@@ -1128,3 +1128,28 @@
   letter-spacing: 0.03em;
   text-align: center;
 }
+
+/* ── Page-transition progress bar ────────────────────────────────────────── */
+#gg-pb {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  width: 0;
+  z-index: 99999;
+  pointer-events: none;
+  background: linear-gradient(to right, #A5D6A7, #ffffff, #69F0AE);
+  box-shadow: 0 0 10px #81C784, 0 0 3px rgba(255,255,255,0.9);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+#gg-pb.gg-pb-run {
+  opacity: 1;
+  animation: gg-pb-crawl 14s cubic-bezier(0.05, 0.15, 0.05, 1) forwards;
+}
+@keyframes gg-pb-crawl {
+  0%   { width: 0% }
+  25%  { width: 50% }
+  55%  { width: 68% }
+  75%  { width: 78% }
+  100% { width: 86% }
+}

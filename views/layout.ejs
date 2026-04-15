@@ -18,6 +18,16 @@
   <link href="/css/style.css" rel="stylesheet">
 </head>
 <body>
+<!-- ── Page-transition progress bar (starts before DOMContentLoaded) ──────── -->
+<div id="gg-pb" aria-hidden="true"></div>
+<script>
+  // Start bar immediately as HTML begins parsing – gives instant visual feedback
+  // even before any JS bundle has loaded.
+  (function(){
+    var b = document.getElementById('gg-pb');
+    if (b) b.classList.add('gg-pb-run');
+  })();
+</script>
 
 <% if (user && user.is_onboarded) { %>
   <!-- ── Mobile top navbar ─────────────────────────────────────────────── -->

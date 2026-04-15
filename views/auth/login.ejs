@@ -72,7 +72,7 @@
 
       <!-- language toggle footer -->
       <div class="lp-lang-bar">
-        <form method="POST" action="/set-language" class="d-flex gap-2">
+        <form method="POST" action="/set-language" class="d-flex gap-2" data-no-loader="true">
           <button name="language" value="de" class="btn btn-xs-lang <%= lang === 'de' ? 'active' : '' %>">🇩🇪 DE</button>
           <button name="language" value="en" class="btn btn-xs-lang <%= lang === 'en' ? 'active' : '' %>">🇬🇧 EN</button>
         </form>
