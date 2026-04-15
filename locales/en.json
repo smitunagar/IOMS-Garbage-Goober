@@ -156,6 +156,7 @@
   "errorPasswordTooShort": "Password must be at least 8 characters.",
   "errorNameRequired": "Name is required.",
   "errorEmailRequired": "Email is required.",
+  "errorDormWifiRequired": "You must be connected to the dormitory WiFi to create an account.",
   "pageNotFound": "Page not found.",
 
   "dutySourceNormal": "Normal rotation",

@@ -5,6 +5,17 @@ const { TOTAL_FLOORS, ROOMS_PER_FLOOR, roomsForFloor } = require('../utils/const
 
 const FLOOR_SPEAKER_CODE = 'WebMeister360_1_FS_425';
 
+/* ── Dorm WiFi restriction ────────────────────────────────────────────────── */
+// Only residents connected to the dormitory WiFi (public IP 77.73.111.240)
+// may create a new account. Vercel sets the real client IP in x-forwarded-for.
+const DORM_WIFI_IP = '77.73.111.240';
+
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return req.ip || '';
+}
+
 const router = express.Router();
 
 /* ── GET /login ──────────────────────────────────────────────────────────── */
@@ -48,6 +59,9 @@ router.post('/login', async (req, res) => {
 /* ── GET /signup ─────────────────────────────────────────────────────────── */
 router.get('/signup', (req, res) => {
   if (req.session.userId) return res.redirect('/home');
+  if (getClientIp(req) !== DORM_WIFI_IP) {
+    res.locals.flash = { error: res.locals.t('errorDormWifiRequired') };
+  }
   res.render('auth/signup', { layout: 'layout', pageTitle: 'Sign Up' });
 });
 
@@ -55,6 +69,12 @@ router.get('/signup', (req, res) => {
 router.post('/signup', async (req, res) => {
   const { name, email, password, confirmPassword } = req.body;
   const t = res.locals.t;
+
+  // ── Dorm WiFi check ────────────────────────────────────────────────────────
+  if (getClientIp(req) !== DORM_WIFI_IP) {
+    req.session.flash = { error: t('errorDormWifiRequired') };
+    return req.session.save(() => res.redirect('/signup'));
+  }
 
   if (!name || !name.trim()) {
     req.session.flash = { error: t('errorNameRequired') };
