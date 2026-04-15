@@ -86,9 +86,8 @@ function fallbackLink(url) {
   </p>`;
 }
 
-/* ── Email Verification ─────────────────────────────────────────────────── */
-async function sendVerificationEmail(toEmail, toName, token) {
-  const url = `${appUrl()}/verify-email?token=${token}`;
+/* ── Email Verification (OTP) ──────────────────────────────────────────── */
+async function sendVerificationEmail(toEmail, toName, otp) {
   const html = emailShell({
     headerIcon: '🗑️',
     headerBg: '#2E7D32',
@@ -96,22 +95,31 @@ async function sendVerificationEmail(toEmail, toName, token) {
     bodyHtml: `
       <p style="margin-top:0">Hi <strong>${toName}</strong>,</p>
       <p>Welcome to <strong>Garbage Goober</strong> — the trash duty manager for GWG Reutlingen dormitory!</p>
-      <p>To activate your account, please verify your email address by clicking the button below:</p>
-      ${actionBtn(url, '✅ Verify my email')}
+      <p>Enter the 6-digit code below in the app to verify your email and activate your account:</p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0;">
+        <tr><td align="center">
+          <div style="display:inline-block;padding:20px 40px;background:#f1f8f1;border:2px solid #2E7D32;
+                      border-radius:12px;font-size:40px;font-weight:800;letter-spacing:12px;
+                      color:#1b5e20;font-family:monospace;">
+            ${otp}
+          </div>
+        </td></tr>
+      </table>
+
       <p style="font-size:13px;color:#888;margin-bottom:4px">
-        ⏰ This link expires in <strong>24 hours</strong>.
+        ⏰ This code expires in <strong>15 minutes</strong>.
       </p>
       <p style="font-size:13px;color:#888;margin-top:4px">
         If you did not create an account, you can safely ignore this email.
       </p>
-      ${fallbackLink(url)}
     `,
   });
 
   await getTransporter().sendMail({
     from: fromAddress(),
     to: toEmail,
-    subject: '✅ Verify your Garbage Goober account',
+    subject: '🗑️ Your Garbage Goober verification code',
     html,
   });
 }

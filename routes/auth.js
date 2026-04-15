@@ -21,13 +21,23 @@ function getClientIp(req) {
 async function createEmailToken(userId, type, expiresInMs) {
   const token = crypto.randomBytes(32).toString('hex');
   const expires = new Date(Date.now() + expiresInMs);
-  // Invalidate any previous tokens of the same type for this user
   await db().run('DELETE FROM email_tokens WHERE user_id = $1 AND type = $2', [userId, type]);
   await db().run(
     'INSERT INTO email_tokens (user_id, token, type, expires_at) VALUES ($1, $2, $3, $4)',
     [userId, token, type, expires]
   );
   return token;
+}
+
+async function createOtpToken(userId) {
+  const otp = String(Math.floor(100000 + Math.random() * 900000)); // 6-digit
+  const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+  await db().run('DELETE FROM email_tokens WHERE user_id = $1 AND type = $2', [userId, 'verify']);
+  await db().run(
+    'INSERT INTO email_tokens (user_id, token, type, expires_at) VALUES ($1, $2, $3, $4)',
+    [userId, otp, 'verify', expires]
+  );
+  return otp;
 }
 
 const router = express.Router();
@@ -66,7 +76,7 @@ router.post('/login', async (req, res) => {
   if (!user.is_email_verified) {
     req.session.flash = { error: t('emailNotVerifiedError') };
     return req.session.save(() =>
-      res.redirect(`/verify-email-sent?email=${encodeURIComponent(user.email)}`)
+      res.redirect(`/verify-otp?email=${encodeURIComponent(user.email)}`)
     );
   }
 
@@ -173,9 +183,9 @@ router.post('/signup', async (req, res) => {
         [email.toLowerCase().trim(), hash, name.trim(), fsFloor, fsRoom, req.body.language || 'de']
       );
       req.session.language = req.body.language || 'de';
-      const token = await createEmailToken(row.id, 'verify', 24 * 60 * 60 * 1000);
-      try { await sendVerificationEmail(email.toLowerCase().trim(), name.trim(), token); } catch (e) { console.error('Verify email error:', e); }
-      return req.session.save(() => res.redirect(`/verify-email-sent?email=${encodeURIComponent(email.toLowerCase().trim())}`));
+      const otp = await createOtpToken(row.id);
+      try { await sendVerificationEmail(email.toLowerCase().trim(), name.trim(), otp); } catch (e) { console.error('Verify email error:', e); }
+      return req.session.save(() => res.redirect(`/verify-otp?email=${encodeURIComponent(email.toLowerCase().trim())}`));
     } catch (err) {
       console.error('Floor speaker signup insert error:', err);
       req.session.flash = { error: t('errorGeneric', { error: err.message }) };
@@ -191,9 +201,9 @@ router.post('/signup', async (req, res) => {
       [email.toLowerCase().trim(), hash, name.trim()]
     );
     req.session.language = req.body.language || 'de';
-    const token = await createEmailToken(row.id, 'verify', 24 * 60 * 60 * 1000);
-    try { await sendVerificationEmail(email.toLowerCase().trim(), name.trim(), token); } catch (e) { console.error('Verify email error:', e); }
-    req.session.save(() => res.redirect(`/verify-email-sent?email=${encodeURIComponent(email.toLowerCase().trim())}`));
+    const otp = await createOtpToken(row.id);
+    try { await sendVerificationEmail(email.toLowerCase().trim(), name.trim(), otp); } catch (e) { console.error('Verify email error:', e); }
+    req.session.save(() => res.redirect(`/verify-otp?email=${encodeURIComponent(email.toLowerCase().trim())}`));
   } catch (err) {
     console.error('Signup insert error:', err);
     req.session.flash = { error: t('errorGeneric', { error: err.message }) };
@@ -320,14 +330,49 @@ router.get('/logout', (req, res) => {
    EMAIL VERIFICATION
 ────────────────────────────────────────────────────────────── */
 
-/* GET /verify-email-sent  – "check your inbox" holding page */
-router.get('/verify-email-sent', (req, res) => {
+/* GET /verify-otp – show OTP entry form */
+router.get('/verify-otp', (req, res) => {
   const email = req.query.email || '';
-  res.render('auth/email-sent', { layout: 'layout', pageTitle: 'Verify Email', email });
+  res.render('auth/verify-otp', { layout: 'layout', pageTitle: 'Verify Account', email });
 });
 
-/* POST /verify-email/resend  – resend a fresh token */
-router.post('/verify-email/resend', async (req, res) => {
+/* POST /verify-otp – validate the 6-digit code */
+router.post('/verify-otp', async (req, res) => {
+  const email = (req.body.email || '').toLowerCase().trim();
+  const otp   = (req.body.otp   || '').trim();
+  const t = res.locals.t;
+
+  const user = await db().queryOne('SELECT * FROM users WHERE email = $1', [email]);
+  if (!user) {
+    req.session.flash = { error: t('errorOtpInvalid') };
+    return req.session.save(() => res.redirect(`/verify-otp?email=${encodeURIComponent(email)}`));
+  }
+  if (user.is_email_verified) {
+    // Already verified – just log them in
+    req.session.userId = user.id;
+    return req.session.save(() => res.redirect(user.is_onboarded ? '/home' : '/onboarding'));
+  }
+
+  const row = await db().queryOne(
+    `SELECT * FROM email_tokens
+     WHERE user_id = $1 AND token = $2 AND type = 'verify' AND expires_at > NOW()`,
+    [user.id, otp]
+  );
+  if (!row) {
+    req.session.flash = { error: t('errorOtpInvalid') };
+    return req.session.save(() => res.redirect(`/verify-otp?email=${encodeURIComponent(email)}`));
+  }
+
+  await db().run('UPDATE users SET is_email_verified = 1 WHERE id = $1', [user.id]);
+  await db().run('DELETE FROM email_tokens WHERE id = $1', [row.id]);
+
+  req.session.userId   = user.id;
+  req.session.language = user.language || 'de';
+  req.session.save(() => res.redirect(user.is_onboarded ? '/home' : '/onboarding'));
+});
+
+/* POST /verify-otp/resend – send a fresh OTP */
+router.post('/verify-otp/resend', async (req, res) => {
   const email = (req.body.email || '').toLowerCase().trim();
   const t = res.locals.t;
   const user = await db().queryOne(
@@ -335,36 +380,12 @@ router.post('/verify-email/resend', async (req, res) => {
   );
   if (!user) {
     req.session.flash = { error: t('resendVerificationNotFound') };
-    return req.session.save(() => res.redirect(`/verify-email-sent?email=${encodeURIComponent(email)}`));
+    return req.session.save(() => res.redirect(`/verify-otp?email=${encodeURIComponent(email)}`));
   }
-  const token = await createEmailToken(user.id, 'verify', 24 * 60 * 60 * 1000);
-  try { await sendVerificationEmail(email, user.name, token); } catch (e) { console.error('Resend verify error:', e); }
+  const otp = await createOtpToken(user.id);
+  try { await sendVerificationEmail(email, user.name, otp); } catch (e) { console.error('Resend OTP error:', e); }
   req.session.flash = { success: t('resendVerificationSuccess') };
-  req.session.save(() => res.redirect(`/verify-email-sent?email=${encodeURIComponent(email)}`));
-});
-
-/* GET /verify-email?token=xxx  – activate account */
-router.get('/verify-email', async (req, res) => {
-  const { token } = req.query;
-  const t = res.locals.t;
-  if (!token) return res.redirect('/login');
-
-  const row = await db().queryOne(
-    `SELECT et.*, u.id AS uid FROM email_tokens et
-     JOIN users u ON u.id = et.user_id
-     WHERE et.token = $1 AND et.type = 'verify' AND et.expires_at > NOW()`,
-    [token]
-  );
-  if (!row) {
-    req.session.flash = { error: t('emailVerificationInvalid') };
-    return req.session.save(() => res.redirect('/login'));
-  }
-
-  await db().run('UPDATE users SET is_email_verified = 1 WHERE id = $1', [row.uid]);
-  await db().run('DELETE FROM email_tokens WHERE id = $1', [row.id]);
-
-  req.session.flash = { success: t('emailVerificationSuccess') };
-  req.session.save(() => res.redirect('/login'));
+  req.session.save(() => res.redirect(`/verify-otp?email=${encodeURIComponent(email)}`));
 });
 
 /* ───────────────────────────────────────────────────────────────
