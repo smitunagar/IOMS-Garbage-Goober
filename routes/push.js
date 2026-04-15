@@ -151,6 +151,15 @@ router.get('/test-smtp', async (req, res) => {
   if (!cronSecret || req.headers['authorization'] !== `Bearer ${cronSecret}`) {
     return res.status(401).json({ ok: false, error: 'Unauthorized' });
   }
+  // Debug: show what env vars are actually present (masked)
+  const envCheck = {
+    SMTP_HOST: process.env.SMTP_HOST || '(missing)',
+    SMTP_PORT: process.env.SMTP_PORT || '(missing)',
+    SMTP_USER: process.env.SMTP_USER ? process.env.SMTP_USER.replace(/(.{3}).*(@.*)/, '$1***$2') : '(missing)',
+    SMTP_PASS: process.env.SMTP_PASS ? `${process.env.SMTP_PASS.length} chars` : '(missing)',
+    SMTP_FROM: process.env.SMTP_FROM ? '(set)' : '(missing)',
+    APP_URL: process.env.APP_URL || '(missing)',
+  };
   const { sendVerificationEmail } = require('../utils/email');
   try {
     await sendVerificationEmail(
@@ -158,9 +167,9 @@ router.get('/test-smtp', async (req, res) => {
       'SMTP Test',
       'test-token-123'
     );
-    res.json({ ok: true, message: 'Email sent successfully to ' + process.env.SMTP_USER });
+    res.json({ ok: true, message: 'Email sent successfully', envCheck });
   } catch (err) {
-    res.json({ ok: false, error: err.message, code: err.code, stack: err.stack });
+    res.json({ ok: false, error: err.message, code: err.code, envCheck });
   }
 });
 
