@@ -4,6 +4,10 @@
     {
       "path": "/push/weekly-duty-reminder",
       "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/push/keepwarm",
+      "schedule": "*/5 * * * *"
     }
   ],
   "builds": [

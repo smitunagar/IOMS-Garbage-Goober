@@ -21,6 +21,21 @@ router.get('/vapid-public-key', (_req, res) => {
   res.json({ key: process.env.VAPID_PUBLIC_KEY || null });
 });
 
+// ── GET /push/keepwarm  (Vercel Cron every 5 min) ────────────────────────────
+// Keeps the Vercel function and Neon DB connection alive so users never hit the
+// cold-start timeout. Touches the DB with a trivial query.
+router.get('/keepwarm', async (req, res) => {
+  const secret = process.env.CRON_SECRET || '';
+  const auth   = (req.headers.authorization || '').replace('Bearer ', '');
+  if (secret && auth !== secret) return res.status(401).json({ ok: false });
+  try {
+    await db().queryOne('SELECT 1 AS ok');
+    res.json({ ok: true, ts: new Date().toISOString() });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 // ── POST /push/subscribe (Web Push VAPID) ────────────────────────────────────
 router.post('/subscribe', requireAuth, requireOnboarded, async (req, res) => {
   const { subscription } = req.body;

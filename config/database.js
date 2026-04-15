@@ -10,7 +10,7 @@ function getPool() {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
       max: 20,
-      idleTimeoutMillis: 30000,
+      idleTimeoutMillis: 270000,   // 4.5 min – just under Neon's 5-min idle cutoff
       connectionTimeoutMillis: 8000,
     });
   }
